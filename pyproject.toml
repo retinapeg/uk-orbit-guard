@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "satellite-avoidance-daytona"
+version = "0.1.0"
+description = "Gravity simulator + RL training skeleton for satellite avoidance of rotating bodies."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "gymnasium>=0.29",
+  "stable-baselines3>=2.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/<your-org>/satellite-avoidance-daytona"
