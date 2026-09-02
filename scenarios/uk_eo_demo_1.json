@@ -1,0 +1,43 @@
+{
+  "scenario_id": "SYN-UK-0001",
+  "seed": 42,
+  "synthetic": true,
+  "model": "local-linear-v0.1",
+  "protected_asset": "UK-EO-DEMO-1",
+  "protected_service": "Earth observation for public-service resilience",
+  "secondary_object": "DEB-DEMO-4421",
+  "orbit_context": "Synthetic near-co-orbital encounter at 550 km altitude",
+  "relative_position_m": [259200.0, 120.0],
+  "relative_velocity_mps": [-12.0, 0.0],
+  "illustrative_buffer_m": 1000.0,
+  "options": [
+    {
+      "option_id": "hold",
+      "label": "Hold course",
+      "lead_time_s": 21600.0,
+      "cross_track_delta_v_mps": 0.0,
+      "description": "Continue monitoring without committing manoeuvre budget."
+    },
+    {
+      "option_id": "act_now",
+      "label": "Act now",
+      "lead_time_s": 21600.0,
+      "cross_track_delta_v_mps": 0.05,
+      "description": "Use the full six-hour warning window for a small corrective manoeuvre."
+    },
+    {
+      "option_id": "wait_same_burn",
+      "label": "Wait: same burn",
+      "lead_time_s": 2700.0,
+      "cross_track_delta_v_mps": 0.05,
+      "description": "Apply the same small manoeuvre only 45 minutes before closest approach."
+    },
+    {
+      "option_id": "wait_recover_margin",
+      "label": "Wait: recover margin",
+      "lead_time_s": 2700.0,
+      "cross_track_delta_v_mps": 0.4,
+      "description": "Use a larger late manoeuvre to recover the same projected separation."
+    }
+  ]
+}

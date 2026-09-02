@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Dict, Tuple
 
 import numpy as np
@@ -38,25 +38,26 @@ class SatelliteAvoidanceEnv(gym.Env):
 
     def __init__(self, config: AvoidanceConfig | None = None, bodies: list[RotatingBody] | None = None):
         super().__init__()
-        self.config = config or AvoidanceConfig()
-        self.bodies = bodies if bodies is not None else make_default_bodies(self.config.num_bodies)
-        self.config.num_bodies = len(self.bodies)
+        base_config = config or AvoidanceConfig()
+        self.bodies = bodies if bodies is not None else make_default_bodies(base_config.num_bodies)
+        self.config = replace(base_config, num_bodies=len(self.bodies))
         self.state = np.zeros(6, dtype=float)
         self.t = 0.0
         self.steps = 0
         self._rng = np.random.default_rng()
 
+        finite_bound = np.finfo(np.float32).max
         self.observation_space = spaces.Box(
-            low=-np.inf,
-            high=np.inf,
+            low=-finite_bound,
+            high=finite_bound,
             shape=(6 + 3 * len(self.bodies),),
-            dtype=np.float64,
+            dtype=np.float32,
         )
         self.action_space = spaces.Box(
             low=-1.0,
             high=1.0,
             shape=(3,),
-            dtype=np.float64,
+            dtype=np.float32,
         )
 
     def _sample_initial_state(self) -> np.ndarray:
@@ -78,7 +79,7 @@ class SatelliteAvoidanceEnv(gym.Env):
 
     def _observe(self) -> np.ndarray:
         rel = self._relative_body_positions(self.state, self.t).reshape(-1)
-        return np.concatenate((self.state, rel), axis=0).astype(np.float64)
+        return np.concatenate((self.state, rel), axis=0).astype(np.float32)
 
     def _min_distance(self) -> float:
         if len(self.bodies) == 0:
@@ -87,8 +88,8 @@ class SatelliteAvoidanceEnv(gym.Env):
         return float(np.min(np.linalg.norm(rel, axis=1)))
 
     def reset(self, seed: int | None = None, options: Dict | None = None):
-        if seed is not None:
-            self._rng = np.random.default_rng(seed)
+        super().reset(seed=seed)
+        self._rng = self.np_random
         self.state = self._sample_initial_state()
         self.t = 0.0
         self.steps = 0
@@ -96,6 +97,12 @@ class SatelliteAvoidanceEnv(gym.Env):
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool, Dict]:
         action = np.asarray(action, dtype=float)
+        if action.shape != self.action_space.shape:
+            raise ValueError(
+                f"action shape {action.shape} does not match {self.action_space.shape}"
+            )
+        if not np.all(np.isfinite(action)):
+            raise ValueError("action must contain only finite values")
         action = np.clip(action, self.action_space.low, self.action_space.high)
         control_accel = action * self.config.max_thrust
 
@@ -112,10 +119,15 @@ class SatelliteAvoidanceEnv(gym.Env):
         self.steps += 1
 
         min_distance = self._min_distance()
-        reward = 0.002 * min_distance - 0.05 * np.dot(action, action) - 0.001 * self.t
+        radius = float(np.linalg.norm(self.state[:3]))
+        collision = bool(min_distance <= self.config.collision_radius)
+        earth_impact = bool(radius <= EARTH_RADIUS_M)
+        out_of_bounds = bool(radius > self.config.max_radius)
+        terminated = bool(collision or earth_impact)
+        truncated = bool(self.steps >= self.config.max_steps or out_of_bounds)
 
-        terminated = min_distance <= self.config.collision_radius
-        truncated = self.steps >= self.config.max_steps or np.linalg.norm(self.state[:3]) > self.config.max_radius
+        clearance_units = min(min_distance / max(self.config.collision_radius, 1.0), 10.0)
+        reward = 0.1 * clearance_units - 0.05 * np.dot(action, action) - 0.001 * self.steps
 
         if terminated:
             reward -= 100.0
@@ -127,5 +139,10 @@ class SatelliteAvoidanceEnv(gym.Env):
             "step": self.steps,
             "min_distance_m": min_distance,
             "terminated": terminated,
+            "earth_impact": earth_impact,
+            "out_of_bounds": out_of_bounds,
+            "termination_reason": (
+                "earth_impact" if earth_impact else "collision" if collision else None
+            ),
         }
         return self._observe(), float(reward), terminated, truncated, info

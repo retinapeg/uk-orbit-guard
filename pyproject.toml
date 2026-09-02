@@ -1,18 +1,38 @@
 [build-system]
-requires = ["setuptools>=65"]
+requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "satellite-avoidance-daytona"
+name = "orbitguard-uk"
 version = "0.1.0"
-description = "Gravity simulator + RL training skeleton for satellite avoidance of rotating bodies."
+description = "Transparent satellite conjunction and policy trade-space prototype for a UK Parliament hackathon."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-  "numpy>=1.26",
-  "gymnasium>=0.29",
-  "stable-baselines3>=2.3",
+  "gymnasium>=0.29,<2",
+  "numpy>=1.26,<3",
+  "pandas>=2.2,<3",
+  "plotly>=5.22,<7",
+  "streamlit>=1.49,<2",
 ]
 
-[project.urls]
-Homepage = "https://github.com/<your-org>/satellite-avoidance-daytona"
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2,<9",
+]
+rl = [
+  "stable-baselines3>=2.3,<3",
+]
+
+[project.scripts]
+orbitguard-demo = "orbit_guard.demo:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]

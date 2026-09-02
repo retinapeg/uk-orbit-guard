@@ -1,3 +1,2 @@
-numpy>=1.26
-gymnasium>=0.29
-stable-baselines3>=2.3
+# Friday demo runtime. RL training is deliberately optional; see README.md.
+-e .

@@ -1,12 +1,46 @@
-name: ci
-on: [push, pull_request]
+name: verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
-  smoke:
+  demo:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      - run: pip install -r requirements.txt
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and test dependencies
+        run: python -m pip install -r requirements-demo-lock.txt
+      - name: Compile Python sources
+        run: python -m compileall -q app.py src
+      - name: Run tests
+        run: python -m pytest -q
+      - name: Smoke-test the visual server
+        run: |
+          python -m streamlit run app.py --server.headless true --server.address 127.0.0.1 --server.port 8501 > /tmp/orbitguard-streamlit.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8501/_stcore/health | grep --quiet '^ok$'; then
+              exit 0
+            fi
+            if ! kill -0 "$app_pid" 2>/dev/null; then
+              cat /tmp/orbitguard-streamlit.log
+              exit 1
+            fi
+            sleep 0.5
+          done
+          cat /tmp/orbitguard-streamlit.log
+          exit 1
+      - name: Verify deterministic demo and fallback exports
+        run: python -m orbit_guard.demo --check
+      - name: Verify committed fallback exports are current
+        run: git diff --exit-code -- artifacts/demo_result.json artifacts/committee_brief.md

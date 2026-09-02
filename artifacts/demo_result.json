@@ -1,0 +1,71 @@
+{
+  "prototype": "UK Orbit Guard \u2014 Conjunction-to-Committee",
+  "scenario_id": "SYN-UK-0001",
+  "synthetic": true,
+  "operational_use": false,
+  "model": "local-linear-v0.1",
+  "seed": 42,
+  "scenario_file_sha256": "9b42ef6dcb542e78b025ee0bcbca36f1bbb5ee8eb3e58afb44f46b8e9a33a34b",
+  "protected_asset": "UK-EO-DEMO-1",
+  "protected_service": "Earth observation for public-service resilience",
+  "secondary_object": "DEB-DEMO-4421",
+  "orbit_context": "Synthetic near-co-orbital encounter at 550 km altitude",
+  "tca_seconds": 21600.0,
+  "baseline_miss_m": 120.0,
+  "illustrative_buffer_m": 1000.0,
+  "recommended_option_id": "act_now",
+  "recommended_option": "Act now",
+  "recommended_delta_v_mps": 0.05,
+  "recommended_miss_m": 1200.0,
+  "delayed_delta_v_mps": 0.4,
+  "delayed_miss_m": 1200.0,
+  "delay_penalty": 8.0,
+  "human_operator_approval_required": true,
+  "options": [
+    {
+      "option_id": "hold",
+      "label": "Hold course",
+      "lead_time_s": 21600.0,
+      "cross_track_delta_v_mps": 0.0,
+      "projected_miss_m": 120.0,
+      "illustrative_buffer_met": false,
+      "description": "Continue monitoring without committing manoeuvre budget."
+    },
+    {
+      "option_id": "act_now",
+      "label": "Act now",
+      "lead_time_s": 21600.0,
+      "cross_track_delta_v_mps": 0.05,
+      "projected_miss_m": 1200.0,
+      "illustrative_buffer_met": true,
+      "description": "Use the full six-hour warning window for a small corrective manoeuvre."
+    },
+    {
+      "option_id": "wait_same_burn",
+      "label": "Wait: same burn",
+      "lead_time_s": 2700.0,
+      "cross_track_delta_v_mps": 0.05,
+      "projected_miss_m": 255.0,
+      "illustrative_buffer_met": false,
+      "description": "Apply the same small manoeuvre only 45 minutes before closest approach."
+    },
+    {
+      "option_id": "wait_recover_margin",
+      "label": "Wait: recover margin",
+      "lead_time_s": 2700.0,
+      "cross_track_delta_v_mps": 0.4,
+      "projected_miss_m": 1200.0,
+      "illustrative_buffer_met": true,
+      "description": "Use a larger late manoeuvre to recover the same projected separation."
+    }
+  ],
+  "assumptions": [
+    "All asset, debris, alert and service identifiers are fictional.",
+    "Constant relative velocity in a two-dimensional local encounter plane.",
+    "Instantaneous ideal cross-track impulse with no execution uncertainty.",
+    "The 1 km separation buffer is illustrative, not an NSpOC or operator threshold.",
+    "No covariance or collision-probability calculation is performed.",
+    "No post-manoeuvre secondary-conjunction screening is performed.",
+    "Delta-v is a manoeuvre-resource proxy, not a fuel, cost or mission-life estimate."
+  ]
+}

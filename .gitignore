@@ -11,3 +11,6 @@ build/
 dist/
 .pytest_cache/
 .mypy_cache/
+.coverage
+artifacts/*.zip
+.streamlit/secrets.toml
