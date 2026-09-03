@@ -20,6 +20,12 @@ from orbit_guard.conjunction import (
     required_delta_v,
     result_by_id,
 )
+from orbit_guard.daytona_rl import runtime_status as daytona_runtime_status
+from orbit_guard.debris_catalogue import (
+    DebrisLoadResult,
+    catalogue_globe_records,
+    load_catalogue as load_debris_catalogue,
+)
 from orbit_guard.demo import (
     ASSUMPTIONS,
     assess_scenario,
@@ -47,7 +53,34 @@ from orbit_guard.public_visuals import (
     build_public_catalogue_globe,
     build_public_proximity_screen,
 )
+from orbit_guard.rl_core import (
+    DEFAULT_STEPS as RL_DEFAULT_STEPS,
+    MAX_OBJECTS as RL_MAX_OBJECTS,
+    MODEL_VERSION as RL_MODEL_VERSION,
+    SAFETY_RADIUS_KM as RL_SAFETY_RADIUS_KM,
+    default_hazards,
+    hazards_from_payload,
+    make_hazard,
+    scenario_fingerprint as rl_scenario_fingerprint,
+    simulate_policy,
+)
+from orbit_guard.rl_visuals import (
+    action_mix,
+    build_command_globe,
+    build_encounter_replay,
+    build_training_curve,
+)
 from orbit_guard.scenario_io import load_scenario, scenario_sha256
+from orbit_guard.training_controller import (
+    RunHandle,
+    TrainingControllerError,
+    discover_active,
+    load_last_verified,
+    load_request as load_training_request,
+    load_result as load_training_result,
+    read_state as read_training_state,
+    start_training,
+)
 
 ROOT = Path(__file__).resolve().parent
 SCENARIO_PATH = ROOT / "scenarios" / "uk_eo_demo_1.json"
@@ -95,6 +128,60 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+if "rl_hazards" not in st.session_state:
+    st.session_state.rl_hazards = default_hazards()
+if "rl_result" not in st.session_state:
+    st.session_state.rl_result = None
+if "rl_result_mode" not in st.session_state:
+    st.session_state.rl_result_mode = None
+if "rl_reattach_error" not in st.session_state:
+    st.session_state.rl_reattach_error = None
+if "rl_terminal_notice" not in st.session_state:
+    st.session_state.rl_terminal_notice = None
+if "rl_run_handle" not in st.session_state:
+    active_run = discover_active()
+    if active_run is not None:
+        st.session_state.rl_run_handle = {
+            "invocation_id": active_run.invocation_id,
+            "run_dir": str(active_run.run_dir),
+        }
+        try:
+            active_request = load_training_request(active_run)
+            st.session_state.rl_hazards = hazards_from_payload(
+                active_request["hazards"]
+            )
+        except (OSError, ValueError, TrainingControllerError):
+            # The status panel will expose the malformed run without inventing
+            # a different scenario or starting a replacement process.
+            st.session_state.rl_reattach_error = (
+                "active controller request could not be validated"
+            )
+        else:
+            st.session_state.rl_reattach_error = None
+    else:
+        st.session_state.rl_run_handle = None
+if "debris_live_tracking" not in st.session_state:
+    st.session_state.debris_live_tracking = True
+if "debris_result" not in st.session_state:
+    try:
+        st.session_state.debris_result = load_debris_catalogue(allow_network=False)
+        st.session_state.debris_error = None
+    except PublicDataError as error:
+        st.session_state.debris_result = None
+        st.session_state.debris_error = str(error)
+if "debris_display_records" not in st.session_state:
+    debris_loaded = st.session_state.debris_result
+    if debris_loaded is not None:
+        display_time = datetime.now(UTC)
+        st.session_state.debris_display_records = catalogue_globe_records(
+            debris_loaded.catalogue,
+            at=display_time,
+        )
+        st.session_state.debris_displayed_at = display_time
+    else:
+        st.session_state.debris_display_records = []
+        st.session_state.debris_displayed_at = datetime.now(UTC)
 
 st.markdown(
     """
@@ -241,6 +328,28 @@ h1, h2, h3 { font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-s
 .public-boundary strong { color:#fde68a; font:700 1rem "Arial Narrow","Aptos Display",sans-serif; letter-spacing:.13em; }
 .public-boundary p { color:#d5e1ef; margin:.35rem 0 0; line-height:1.48; }
 .synthetic-badge { margin:.55rem 0 .7rem; padding:.48rem .65rem; border:1px solid rgba(251,75,92,.38); border-radius:8px; background:rgba(127,29,29,.16); color:#fecdd3; font:700 .72rem monospace; letter-spacing:.06em; }
+.command-ribbon { display:flex; flex-wrap:wrap; gap:.48rem; align-items:center; margin:.62rem 0 .8rem; padding:.72rem .9rem; border:1px solid rgba(34,211,238,.4); border-left:5px solid #22d3ee; border-radius:10px; background:linear-gradient(90deg,rgba(8,47,73,.84),rgba(2,6,23,.94)); font:700 .72rem monospace; letter-spacing:.055em; }
+.command-ribbon .live-dot { width:.58rem; height:.58rem; border-radius:50%; background:#22d3ee; box-shadow:0 0 18px rgba(34,211,238,.9); }
+.command-ribbon .warn-dot { background:#fbbf24; box-shadow:0 0 18px rgba(251,191,36,.75); }
+.command-ribbon .fail-dot { background:#fb4b5c; box-shadow:0 0 18px rgba(251,75,92,.75); }
+.command-ribbon strong { color:#ecfeff; }
+.command-ribbon span { color:#9fb1c8; }
+.command-panel { padding:1rem; border:1px solid rgba(103,232,249,.22); border-radius:14px; background:linear-gradient(155deg,rgba(8,47,73,.38),rgba(2,6,23,.93)); box-shadow:inset 0 1px 0 rgba(255,255,255,.035); }
+.command-panel h3 { margin:.1rem 0 .35rem; font-size:1.45rem; }
+.command-panel p { color:#b9c8db; font-size:.82rem; line-height:1.48; }
+.status-rail { display:flex; flex-direction:column; gap:.48rem; margin:.65rem 0; }
+.status-step { display:grid; grid-template-columns:1rem 1fr auto; gap:.5rem; align-items:center; padding:.48rem .55rem; border:1px solid rgba(148,163,184,.13); border-radius:7px; background:rgba(2,6,23,.58); color:#71849b; font:700 .66rem monospace; }
+.status-step.active { color:#e6fbff; border-color:rgba(34,211,238,.5); background:rgba(8,47,73,.5); box-shadow:0 0 22px rgba(34,211,238,.08); }
+.status-step.done { color:#86efac; border-color:rgba(74,222,128,.25); }
+.status-step.failed { color:#fda4af; border-color:rgba(251,75,92,.4); }
+.generation-rail { display:grid; grid-template-columns:repeat(11,1fr); gap:.28rem; margin:.45rem 0 .85rem; }
+.generation-node { padding:.45rem .12rem; text-align:center; border:1px solid rgba(148,163,184,.18); border-radius:6px; background:rgba(2,6,23,.58); color:#64748b; font:700 .65rem monospace; }
+.generation-node.available { color:#a5f3fc; border-color:rgba(34,211,238,.35); background:rgba(8,47,73,.38); }
+.generation-node.selected { color:#111827; border-color:#fbbf24; background:#fbbf24; box-shadow:0 0 22px rgba(251,191,36,.3); }
+.model-card { padding:.9rem 1rem; border:1px solid rgba(167,139,250,.25); border-left:4px solid #a78bfa; border-radius:10px; background:linear-gradient(110deg,rgba(46,16,101,.22),rgba(2,6,23,.9)); }
+.model-card strong { color:#ddd6fe; }
+.model-card p { margin:.3rem 0; color:#b8c7da; font-size:.78rem; line-height:1.48; }
+.object-chip { display:inline-block; margin:.16rem .16rem .16rem 0; padding:.25rem .42rem; border:1px solid rgba(251,113,133,.35); border-radius:5px; color:#fecdd3; background:rgba(127,29,29,.2); font:700 .65rem monospace; }
 
 .stTabs [data-baseweb="tab-list"] { gap:.45rem; margin-top:.55rem; }
 .stTabs [data-baseweb="tab"] { height:3.2rem; padding:0 1.15rem; color:#9fb1c8; background:rgba(15,23,42,.62); border-radius:9px 9px 0 0; border:1px solid rgba(148,163,184,.12); }
@@ -588,6 +697,147 @@ def render_synthetic_badge() -> None:
     )
 
 
+RL_PHASES = (
+    "QUEUED",
+    "CREATING",
+    "LIVE",
+    "TRAINING",
+    "VALIDATING",
+    "RESULT_COLLECTED",
+    "CLEANED",
+    "COMPLETE",
+)
+
+
+def run_handle_from_session() -> RunHandle | None:
+    raw = st.session_state.get("rl_run_handle")
+    if not isinstance(raw, dict):
+        return None
+    invocation_id = raw.get("invocation_id")
+    run_dir = raw.get("run_dir")
+    if not isinstance(invocation_id, str) or not isinstance(run_dir, str):
+        return None
+    return RunHandle(invocation_id, Path(run_dir))
+
+
+def remember_run_handle(handle: RunHandle) -> None:
+    st.session_state.rl_run_handle = {
+        "invocation_id": handle.invocation_id,
+        "run_dir": str(handle.run_dir),
+    }
+
+
+def training_state_html(state: dict[str, object]) -> str:
+    current = str(state["state"])
+    active_index = RL_PHASES.index(current) if current in RL_PHASES else -1
+    rows: list[str] = []
+    for index, phase in enumerate(RL_PHASES):
+        css_class = "status-step"
+        marker = "○"
+        if current == "FAILED" and phase == "TRAINING":
+            css_class += " failed"
+            marker = "×"
+        elif index < active_index or current == "COMPLETE":
+            css_class += " done"
+            marker = "✓"
+        elif index == active_index:
+            css_class += " active"
+            marker = "●"
+        rows.append(
+            f'<div class="{css_class}"><span>{marker}</span>'
+            f'<span>{escape(phase.replace("_", " "))}</span><span>{index:02d}</span></div>'
+        )
+    return '<div class="status-rail">' + "".join(rows) + "</div>"
+
+
+@st.fragment(run_every=1.0)
+def render_training_monitor(invocation_id: str, run_dir: str) -> None:
+    handle = RunHandle(invocation_id, Path(run_dir))
+    try:
+        state = read_training_state(handle)
+    except (OSError, ValueError, TrainingControllerError) as error:
+        st.error(f"Training state could not be validated: {error}")
+        return
+    st.markdown(training_state_html(state), unsafe_allow_html=True)
+    sandbox_id = state.get("sandbox_id")
+    st.caption(
+        f"{state['message']} · revision {state['revision']}"
+        + (f" · sandbox {sandbox_id}" if sandbox_id else "")
+    )
+    if state["state"] == "FAILED":
+        st.error(
+            f"DAYTONA FAILED — no local result was substituted. {state.get('error') or ''}"
+        )
+        # The fragment was mounted while the parent still considered the run
+        # active. A full rerun switches the ribbon and controls into the
+        # terminal FAILED state and unmounts this polling fragment.
+        st.rerun()
+    elif state["state"] == "COMPLETE":
+        try:
+            result = load_training_result(handle)
+        except (OSError, ValueError, TrainingControllerError) as error:
+            st.error(f"Completed result failed its envelope check: {error}")
+            st.rerun()
+        previous = st.session_state.get("rl_result")
+        if not isinstance(previous, dict) or previous.get("invocation_id") != result.get("invocation_id"):
+            st.session_state.rl_result = result
+            st.session_state.rl_result_mode = "live"
+            st.rerun()
+
+
+@st.fragment(run_every=5.0)
+def render_live_orbit_globe(
+    replay: dict[str, object] | None,
+    source_label: str,
+) -> None:
+    """Advance public mean elements at a visible command-centre cadence."""
+
+    loaded: DebrisLoadResult | None = st.session_state.debris_result
+    tracking = bool(st.session_state.debris_live_tracking)
+    if tracking and loaded is not None:
+        displayed_at = datetime.now(UTC)
+        records = catalogue_globe_records(loaded.catalogue, at=displayed_at)
+        st.session_state.debris_display_records = records
+        st.session_state.debris_displayed_at = displayed_at
+    else:
+        records = st.session_state.debris_display_records
+        displayed_at = st.session_state.debris_displayed_at
+    status = (
+        "5 s DATED-ELEMENT DISPLAY PROPAGATION"
+        if tracking
+        else "POSITION TRACK PAUSED"
+    )
+    st.plotly_chart(
+        build_command_globe(
+            records,
+            replay=replay,
+            source_label=f"{source_label} · {status}",
+            displayed_at=format_public_utc(displayed_at),
+        ),
+        width="stretch",
+        config={"displayModeBar": False},
+        key="command_debris_globe",
+    )
+    st.caption(
+        f"● {status} · {len(records):,} public mean-element objects · "
+        "not sensor telemetry"
+    )
+
+
+def generation_rail(selected: int, available: int) -> str:
+    nodes = []
+    for generation in range(11):
+        css_class = "generation-node"
+        if generation <= available:
+            css_class += " available"
+        if generation == selected:
+            css_class += " selected"
+        nodes.append(
+            f'<div class="{css_class}">G{generation}</div>'
+        )
+    return '<div class="generation-rail">' + "".join(nodes) + "</div>"
+
+
 st.markdown(
     '<div class="classification"><span class="pulse"></span>Public-data prototype · No restricted feeds · No command · Not for flight operations</div>',
     unsafe_allow_html=True,
@@ -597,11 +847,12 @@ st.markdown(
 <section class="hero">
   <div class="eyebrow">UK Parliament Hackathon · Defensive Space Resilience</div>
   <div class="hero-title">UK <span>ORBIT GUARD</span></div>
-  <div class="hero-sub"><strong>Conjunction-to-Committee.</strong> Public orbital context → transparent screening → a separately auditable resilience case for Parliament, UK Space Command and the public services that depend on space.</div>
-  <div class="hero-meta">PUBLIC CATALOGUE CONTEXT + SYNTHETIC POLICY LAB · SCENARIO {scenario.scenario_id} · HUMAN AUTHORITY REQUIRED</div>
+  <div class="hero-sub"><strong>Conjunction-to-Committee.</strong> Protect the orbital services behind UK air and joint operations: thousands of public debris-field objects → constructed synthetic encounters → an optional Daytona Gen 0→10 execution path → an auditable resilience case for Parliament, UK Space Command and the public services that depend on space.</div>
+  <div class="hero-meta">PUBLIC ORBIT FIELD + DAYTONA EXECUTION PATH + SYNTHETIC HILL-FRAME TRAINING · HUMAN AUTHORITY REQUIRED</div>
   <div class="mission-strip">
     <div class="mission-chip">Space-domain awareness</div>
     <div class="mission-chip">Asset protection</div>
+    <div class="mission-chip">RAF &amp; joint-force resilience</div>
     <div class="mission-chip">Civil–defence coordination</div>
     <div class="mission-chip">Evidence for scrutiny</div>
   </div>
@@ -631,14 +882,581 @@ public_refresh_blocked = isinstance(refresh_blocked_until, datetime)
 
 public_result: SnapshotLoadResult | None = st.session_state.public_context_result
 
-tab_public, tab_alert, tab_options, tab_brief = st.tabs(
+tab_command, tab_public, tab_alert, tab_options, tab_brief = st.tabs(
     [
-        "00  PUBLIC ORBIT PICTURE",
-        "01  SYNTHETIC ALERT",
-        "02  MANOEUVRE OPTIONS",
-        "03  COMMITTEE BRIEF",
+        "00  SPACE COMMAND",
+        "01  PUBLIC ORBIT PICTURE",
+        "02  SYNTHETIC ALERT",
+        "03  MANOEUVRE OPTIONS",
+        "04  COMMITTEE BRIEF",
     ]
 )
+
+with tab_command:
+    daytona_status = daytona_runtime_status()
+    run_handle = run_handle_from_session()
+    reattach_error = st.session_state.get("rl_reattach_error")
+    run_state: dict[str, object] | None = None
+    run_state_error: str | None = None
+    if run_handle is not None:
+        try:
+            run_state = read_training_state(run_handle)
+        except (OSError, ValueError, TrainingControllerError) as error:
+            reattach_error = (
+                "active controller state could not be validated: " + str(error)
+            )
+            st.session_state.rl_reattach_error = reattach_error
+        else:
+            phase = str(run_state["state"])
+            if phase == "FAILED":
+                st.session_state.rl_terminal_notice = {
+                    "kind": "failed",
+                    "detail": str(run_state.get("error") or run_state["message"]),
+                }
+                st.session_state.rl_run_handle = None
+                st.session_state.rl_reattach_error = None
+                run_handle = None
+                reattach_error = None
+            elif phase == "COMPLETE":
+                try:
+                    frozen_request = load_training_request(run_handle)
+                    frozen_hazards = hazards_from_payload(
+                        frozen_request["hazards"]
+                    )
+                    completed_result = load_training_result(run_handle)
+                except (OSError, ValueError, TrainingControllerError) as error:
+                    run_state_error = str(error)
+                    st.session_state.rl_result = None
+                    st.session_state.rl_result_mode = None
+                    st.session_state.rl_terminal_notice = {
+                        "kind": "rejected",
+                        "detail": run_state_error,
+                    }
+                else:
+                    st.session_state.rl_hazards = frozen_hazards
+                    st.session_state.rl_result = completed_result
+                    st.session_state.rl_result_mode = "live"
+                    st.session_state.rl_terminal_notice = None
+                st.session_state.rl_run_handle = None
+                st.session_state.rl_reattach_error = None
+                run_handle = None
+                reattach_error = None
+            else:
+                try:
+                    frozen_request = load_training_request(run_handle)
+                    frozen_hazards = hazards_from_payload(
+                        frozen_request["hazards"]
+                    )
+                except (OSError, ValueError, TrainingControllerError) as error:
+                    reattach_error = (
+                        "active controller request could not be validated: "
+                        + str(error)
+                    )
+                    st.session_state.rl_reattach_error = reattach_error
+                else:
+                    st.session_state.rl_hazards = frozen_hazards
+                    st.session_state.rl_reattach_error = None
+                    st.session_state.rl_terminal_notice = None
+                    reattach_error = None
+    rl_hazards = (
+        [] if reattach_error else list(st.session_state.rl_hazards)
+    )
+    current_scenario_hash = rl_scenario_fingerprint(rl_hazards, RL_DEFAULT_STEPS)
+    run_active = bool(
+        run_state and run_state.get("state") not in {"COMPLETE", "FAILED"}
+    ) or bool(run_handle is not None and reattach_error)
+    training_result = st.session_state.get("rl_result")
+    result_matches_scenario = bool(
+        not reattach_error
+        and isinstance(training_result, dict)
+        and training_result.get("scenario_sha256") == current_scenario_hash
+        and training_result.get("model_version") == RL_MODEL_VERSION
+    )
+    result_mode = st.session_state.get("rl_result_mode")
+    terminal_notice = st.session_state.get("rl_terminal_notice")
+
+    if reattach_error:
+        ribbon_title = "INCOHERENT ACTIVE RUN"
+        ribbon_detail = "FROZEN REQUEST INVALID · SCENARIO DISPLAY WITHHELD"
+        ribbon_class = "live-dot warn-dot"
+    elif isinstance(terminal_notice, dict) and terminal_notice.get("kind") == "failed":
+        ribbon_title = "DAYTONA FAILED"
+        ribbon_detail = "NO RESULT ACCEPTED · NO LOCAL TRAINING SUBSTITUTED"
+        ribbon_class = "live-dot warn-dot"
+    elif isinstance(terminal_notice, dict) and terminal_notice.get("kind") == "rejected":
+        ribbon_title = "RESULT REJECTED"
+        ribbon_detail = "CONTROLLER OR RESULT EVIDENCE FAILED VALIDATION"
+        ribbon_class = "live-dot warn-dot"
+    elif run_active and run_state is not None:
+        ribbon_title = "LIVE DAYTONA COMPUTE"
+        ribbon_detail = (
+            f"{run_state['state']} · SANDBOX "
+            f"{run_state.get('sandbox_id') or 'AWAITING ID'}"
+        )
+        ribbon_class = "live-dot"
+    elif result_matches_scenario and result_mode == "live":
+        ribbon_title = "VERIFIED DAYTONA RESULT"
+        ribbon_detail = "GEN 0→10 · RESULT VALIDATED · SANDBOX DELETED"
+        ribbon_class = "live-dot"
+    elif result_matches_scenario and result_mode == "recorded":
+        ribbon_title = "RECORDED DAYTONA REPLAY"
+        ribbon_detail = "VALIDATED PRIOR RUN · NOT CURRENT LIVE COMPUTE"
+        ribbon_class = "live-dot warn-dot"
+    elif daytona_status["ready"]:
+        ribbon_title = "DAYTONA READY"
+        ribbon_detail = "SYNTHETIC INPUT · PRESS TRAIN TO CREATE ONE PRIVATE SANDBOX"
+        ribbon_class = "live-dot"
+    else:
+        ribbon_title = "LOCAL GEN 0 PREVIEW"
+        if not daytona_status["sdk_installed"]:
+            readiness_detail = "DAYTONA SDK NOT INSTALLED"
+        elif not daytona_status["version_compatible"]:
+            readiness_detail = "PINNED DAYTONA SDK VERSION NOT ACTIVE"
+        else:
+            readiness_detail = "DAYTONA CREDENTIAL NOT PRESENT IN THIS APP PROCESS"
+        ribbon_detail = readiness_detail + " · NO TRAINING SUBSTITUTED"
+        ribbon_class = "live-dot warn-dot"
+    st.markdown(
+        f'<div class="command-ribbon"><span class="{ribbon_class}"></span>'
+        f'<strong>{escape(ribbon_title)}</strong><span>{escape(ribbon_detail)}</span>'
+        f'<span>SCENARIO {"WITHHELD" if reattach_error else current_scenario_hash[:12] + "…"}</span></div>',
+        unsafe_allow_html=True,
+    )
+    if reattach_error:
+        st.error(
+            "ACTIVE CONTROLLER REQUEST INVALID — its frozen scenario could not be "
+            "validated, so the synthetic encounter display and result matching are "
+            "withheld. No replacement run will be started while this run remains active."
+        )
+    elif isinstance(terminal_notice, dict):
+        if terminal_notice.get("kind") == "failed":
+            st.error(
+                "DAYTONA FAILED — no local result was substituted. "
+                + str(terminal_notice.get("detail") or "")
+            )
+        elif terminal_notice.get("kind") == "rejected":
+            st.error(
+                "RESULT REJECTED — controller or result evidence did not validate. "
+                + str(terminal_notice.get("detail") or "")
+            )
+
+    debris_result: DebrisLoadResult | None = st.session_state.debris_result
+    debris_records = st.session_state.debris_display_records
+    if reattach_error:
+        baseline_replay = None
+        available_generation = 0
+        evolution = []
+    else:
+        baseline_replay = simulate_policy(rl_hazards, max_steps=RL_DEFAULT_STEPS)
+        if result_matches_scenario:
+            available_generation = int(training_result["generations"])
+            evolution = training_result["policy_evolution"]
+        else:
+            available_generation = 0
+            evolution = [
+                {
+                    "generation": 0,
+                    "success": baseline_replay["success"],
+                    "termination": baseline_replay["termination"],
+                    "reward": baseline_replay["reward"],
+                    "min_clearance_km": baseline_replay["min_clearance_km"],
+                    "fuel_impulse_m_s": baseline_replay["fuel_impulse_m_s"],
+                    "steps": baseline_replay["steps"],
+                    "actions": baseline_replay["actions"],
+                    "action_names": baseline_replay["action_names"],
+                    "trajectory": baseline_replay["trajectory"],
+                }
+            ]
+    if st.session_state.get("rl_generation", 0) > available_generation:
+        st.session_state.rl_generation = available_generation
+
+    globe_col, command_col = st.columns([1.72, 0.72], gap="large")
+    with globe_col:
+        if debris_result is None:
+            globe_source = "NO VALIDATED PUBLIC CATALOGUE"
+        elif debris_result.origin == "network":
+            globe_source = "CURRENT-SESSION CELESTRAK GP FETCH"
+        elif debris_result.origin == "cache":
+            globe_source = "CACHED CELESTRAK GP SNAPSHOT"
+        elif debris_result.origin == "stale cache":
+            globe_source = "STALE CACHED CELESTRAK GP SNAPSHOT"
+        else:
+            globe_source = "BUNDLED CELESTRAK GP REPLAY"
+        selected_for_globe = (
+            None
+            if reattach_error
+            else evolution[
+                min(st.session_state.get("rl_generation", 0), available_generation)
+            ]
+        )
+        render_live_orbit_globe(selected_for_globe, globe_source)
+        sync_col, refresh_debris_col, provenance_col = st.columns([0.75, 0.85, 1.4])
+        with sync_col:
+            tracking_label = (
+                "❚❚ PAUSE TRACK"
+                if st.session_state.debris_live_tracking
+                else "▶ RESUME TRACK"
+            )
+            if st.button(tracking_label, width="stretch", disabled=run_active):
+                st.session_state.debris_live_tracking = not bool(
+                    st.session_state.debris_live_tracking
+                )
+                st.rerun()
+        with refresh_debris_col:
+            if st.button("⇣ REFRESH IF DUE", width="stretch", disabled=run_active):
+                with st.spinner(
+                    "Checking the 12-hour cache and fetching public groups only if due…"
+                ):
+                    try:
+                        refreshed = load_debris_catalogue(allow_network=True)
+                    except (PublicDataError, OSError) as error:
+                        st.session_state.debris_error = str(error)
+                    else:
+                        sync_time = datetime.now(UTC)
+                        st.session_state.debris_result = refreshed
+                        st.session_state.debris_display_records = catalogue_globe_records(
+                            refreshed.catalogue, at=sync_time
+                        )
+                        st.session_state.debris_displayed_at = sync_time
+                        st.session_state.debris_error = None
+                st.rerun()
+        with provenance_col:
+            if debris_result is not None:
+                st.caption(
+                    f"{len(debris_result.catalogue.records):,} records · catalogue "
+                    f"{debris_result.catalogue.content_sha256[:12]}… · positions "
+                    "propagated with SGP4 for display"
+                )
+        if st.session_state.get("debris_error"):
+            st.warning(
+                "Debris refresh failed; the last validated catalogue remains on screen. "
+                + str(st.session_state.debris_error)
+            )
+        elif debris_result is not None and debris_result.warning:
+            st.warning(debris_result.warning)
+        elif debris_result is not None and not debris_result.fresh:
+            st.info(
+                "The validated catalogue is older than the 12-hour freshness window. "
+                "Position propagation is current to the displayed clock; the source "
+                "mean elements are not."
+            )
+
+    with command_col:
+        st.markdown(
+            """
+<div class="command-panel">
+  <div class="panel-kicker">Encounter injection console</div>
+  <h3>GUARD-1 / POLICY LAB</h3>
+  <p>Add synthetic local encounters to the controlled satellite. The thousands of public objects remain a separate context layer and are never treated as training truth.</p>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+        inject_disabled = run_active or len(rl_hazards) >= RL_MAX_OBJECTS
+        if st.button("＋ HEAD-ON OBJECT", width="stretch", disabled=inject_disabled):
+            st.session_state.rl_hazards = [
+                *rl_hazards,
+                make_hazard("head_on", len(rl_hazards)),
+            ]
+            st.session_state.rl_result = None
+            st.session_state.rl_result_mode = None
+            st.session_state.rl_generation = 0
+            st.rerun()
+        if st.button("＋ CROSSING OBJECT", width="stretch", disabled=inject_disabled):
+            st.session_state.rl_hazards = [
+                *rl_hazards,
+                make_hazard("crossing", len(rl_hazards)),
+            ]
+            st.session_state.rl_result = None
+            st.session_state.rl_result_mode = None
+            st.session_state.rl_generation = 0
+            st.rerun()
+        if st.button("＋ FAST DEBRIS", width="stretch", disabled=inject_disabled):
+            st.session_state.rl_hazards = [
+                *rl_hazards,
+                make_hazard("fast_debris", len(rl_hazards)),
+            ]
+            st.session_state.rl_result = None
+            st.session_state.rl_result_mode = None
+            st.session_state.rl_generation = 0
+            st.rerun()
+        chip_html = "".join(
+            f'<span class="object-chip">{escape(item.object_id)} · {escape(item.kind.upper().replace("_", " "))}</span>'
+            for item in rl_hazards
+        ) or '<span class="object-chip">NO LOCAL OBJECTS</span>'
+        st.markdown(chip_html, unsafe_allow_html=True)
+        clear_col, reset_col = st.columns(2)
+        with clear_col:
+            if st.button("CLEAR", width="stretch", disabled=run_active or not rl_hazards):
+                st.session_state.rl_hazards = []
+                st.session_state.rl_result = None
+                st.session_state.rl_result_mode = None
+                st.session_state.rl_generation = 0
+                st.rerun()
+        with reset_col:
+            if st.button("RESET", width="stretch", disabled=run_active):
+                st.session_state.rl_hazards = default_hazards()
+                st.session_state.rl_result = None
+                st.session_state.rl_result_mode = None
+                st.session_state.rl_generation = 0
+                st.session_state.rl_run_handle = None
+                st.session_state.rl_reattach_error = None
+                st.session_state.rl_terminal_notice = None
+                st.rerun()
+
+        st.markdown(
+            f"""
+<div class="model-card">
+  <strong>DAYTONA TRAINING CONTRACT (WHEN RUN)</strong>
+  <p>{RL_MODEL_VERSION} · 10 generations · 24 candidate policies · 3 perturbed episodes each · 720 requested remote search episodes · seed 42.</p>
+  <p>5 mm/s² synthetic acceleration · 20 s hold · 0.10 m/s impulse per commanded step · {RL_SAFETY_RADIUS_KM:.2f} km illustrative keep-out radius.</p>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            f"Host SDK: {daytona_status['sdk_version'] or 'not installed'} · "
+            f"credential: {'present' if daytona_status['credential_present'] else 'missing'}"
+        )
+        train_disabled = run_active or not rl_hazards or not daytona_status["ready"]
+        if st.button(
+            "▶ TRAIN GEN 0 → 10 ON DAYTONA",
+            type="primary",
+            width="stretch",
+            disabled=train_disabled,
+        ):
+            try:
+                launched = start_training(
+                    rl_hazards,
+                    seed=42,
+                    generations=10,
+                    population=24,
+                    episodes_per_candidate=3,
+                    max_steps=RL_DEFAULT_STEPS,
+                )
+            except TrainingControllerError as error:
+                st.error(str(error))
+            else:
+                remember_run_handle(launched)
+                st.session_state.rl_result = None
+                st.session_state.rl_result_mode = None
+                st.session_state.rl_terminal_notice = None
+                st.rerun()
+        if st.button("↻ LOAD LAST VERIFIED REPLAY", width="stretch", disabled=run_active):
+            recorded_result = load_last_verified()
+            if recorded_result is None:
+                st.warning("No host-validated Daytona replay has been recorded yet.")
+            else:
+                st.session_state.rl_result = recorded_result
+                st.session_state.rl_result_mode = "recorded"
+                st.session_state.rl_hazards = hazards_from_payload(
+                    recorded_result["hazards"]
+                )
+                st.session_state.rl_generation = int(recorded_result["generations"])
+                # A replay is an explicit operator-selected mode. Detach the
+                # terminal controller handle so an earlier FAILED/REJECTED
+                # ribbon cannot be paired with this separate recorded result.
+                # The original run directory remains on disk for inspection.
+                st.session_state.rl_run_handle = None
+                st.session_state.rl_reattach_error = None
+                st.session_state.rl_terminal_notice = None
+                st.rerun()
+        if run_handle is not None and run_active:
+            render_training_monitor(run_handle.invocation_id, str(run_handle.run_dir))
+        elif run_state is not None:
+            st.markdown(training_state_html(run_state), unsafe_allow_html=True)
+            st.caption(
+                f"{run_state['message']} · revision {run_state['revision']}"
+                + (
+                    f" · sandbox {run_state['sandbox_id']}"
+                    if run_state.get("sandbox_id")
+                    else ""
+                )
+            )
+            if run_state["state"] == "FAILED":
+                st.error(
+                    "DAYTONA FAILED — no local result was substituted. "
+                    + str(run_state.get("error") or "")
+                )
+            elif run_state_error:
+                st.error(
+                    "Completed result failed strict validation: "
+                    + run_state_error
+                )
+        elif run_state_error:
+            st.error("Training state could not be reconciled: " + run_state_error)
+        elif not daytona_status["ready"]:
+            if not daytona_status["sdk_installed"]:
+                readiness_fix = "install requirements-live.txt in this environment"
+            elif not daytona_status["version_compatible"]:
+                readiness_fix = "launch the environment pinned to daytona==0.207.0"
+            else:
+                readiness_fix = "set DAYTONA_API_KEY in the Streamlit process, then restart"
+            st.warning(
+                "Live training is correctly locked: " + readiness_fix + ". The Gen 0 "
+                "preview is local; no local training result is presented as Daytona."
+            )
+
+    if reattach_error:
+        st.markdown(
+            """
+<div class="command-panel">
+  <div class="panel-kicker">Synthetic evidence withheld</div>
+  <h3>ACTIVE RUN CANNOT BE JOINED TO A VALIDATED SCENARIO.</h3>
+  <p>No generation rail, clearance metric, trajectory, action mix, learning curve or run passport is rendered. Preserve the controller record for operator review; do not substitute a new local scenario.</p>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+    else:
+        if available_generation == 0:
+            selected_generation = st.slider(
+                "POLICY GENERATION — Gen 1–10 unlock after validated Daytona training",
+                min_value=0,
+                max_value=10,
+                value=0,
+                step=1,
+                disabled=True,
+            )
+        else:
+            selected_generation = st.slider(
+                "POLICY GENERATION — scrub from the untrained baseline to the retained policy",
+                min_value=0,
+                max_value=available_generation,
+                value=min(
+                    st.session_state.get("rl_generation", 0), available_generation
+                ),
+                step=1,
+                key="rl_generation",
+            )
+        st.markdown(
+            generation_rail(selected_generation, available_generation),
+            unsafe_allow_html=True,
+        )
+        selected_replay = evolution[selected_generation]
+        metric_cols = st.columns(5)
+        metric_cols[0].metric(
+            "PUBLIC DEBRIS FIELD",
+            f"{len(debris_records):,}",
+            "3 CELESTRAK GROUPS",
+        )
+        metric_cols[1].metric(
+            "LOCAL OBJECTS", len(rl_hazards), "SYNTHETIC INJECTIONS"
+        )
+        metric_cols[2].metric(
+            "POLICY", f"GEN {selected_generation}", "0 = COAST"
+        )
+        metric_cols[3].metric(
+            "MIN SIMULATED CLEARANCE",
+            f"{float(selected_replay['min_clearance_km']):.3f} km",
+            "LOCAL TEACHING CASE",
+        )
+        metric_cols[4].metric(
+            "CONTROL IMPULSE",
+            f"{float(selected_replay['fuel_impulse_m_s']):.2f} m/s",
+            "ACCUMULATED SYNTHETIC",
+        )
+
+        replay_col, learning_col = st.columns([1.55, 0.95], gap="large")
+        with replay_col:
+            st.plotly_chart(
+                build_encounter_replay(
+                    selected_replay,
+                    generation=selected_generation,
+                    baseline=evolution[0],
+                ),
+                width="stretch",
+                config={"displayModeBar": False},
+                key=f"rl_encounter_gen_{selected_generation}",
+            )
+            st.caption(
+                "Magnified local Hill/LVLH encounter view: x is radial offset and y is "
+                "along-track offset. This is not an Earth-centred ephemeris, collision "
+                "probability, manoeuvre plan or command link."
+            )
+        with learning_col:
+            if result_matches_scenario:
+                st.plotly_chart(
+                    build_training_curve(training_result, selected_generation),
+                    width="stretch",
+                    config={"displayModeBar": False},
+                    key="rl_training_curve",
+                )
+                before = training_result["baseline_evaluation"]
+                after = training_result["trained_evaluation"]
+                st.markdown(
+                    f"""
+<div class="recommendation">
+  <div class="panel-kicker">Frozen nominal replay · not a safety claim</div>
+  <div class="big">{float(before['min_clearance_km']):.3f} → {float(after['min_clearance_km']):.3f} km</div>
+  <p>On this one declared synthetic case, the retained Gen 10 checkpoint changed the trajectory from <strong>{escape(str(before['termination']).replace('_', ' '))}</strong> to <strong>{escape(str(after['termination']).replace('_', ' '))}</strong>.</p>
+</div>
+""",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    """
+<div class="command-panel">
+  <div class="panel-kicker">Generation evidence awaiting Daytona</div>
+  <h3>GEN 0 IS VISIBLE. GEN 1–10 ARE LOCKED.</h3>
+  <p>The UI will not invent a learning curve. Once a real sandbox returns a validated changed checkpoint, every retained generation and its trajectory appears here.</p>
+</div>
+""",
+                    unsafe_allow_html=True,
+                )
+            mix = action_mix(selected_replay)
+            st.dataframe(
+                pd.DataFrame(
+                    {"Action": list(mix), "Held steps": list(mix.values())}
+                ),
+                hide_index=True,
+                width="stretch",
+            )
+
+        if result_matches_scenario:
+            execution = training_result["daytona_execution"]
+            with st.expander("Verified Daytona run passport"):
+                st.code(
+                    json.dumps(
+                        {
+                            "invocation_id": execution["invocation_id"],
+                            "sandbox_id": execution["sandbox_id"],
+                            "sandbox_deleted": execution["sandbox_deleted"],
+                            "local_training_fallback_used": execution[
+                                "local_training_fallback_used"
+                            ],
+                            "scenario_sha256": training_result["scenario_sha256"],
+                            "runtime_bundle_sha256": execution[
+                                "runtime_bundle_sha256"
+                            ],
+                            "initial_checkpoint_sha256": training_result[
+                                "initial_checkpoint_sha256"
+                            ],
+                            "trained_checkpoint_sha256": training_result[
+                                "trained_checkpoint_sha256"
+                            ],
+                            "training_episodes": training_result[
+                                "training_episodes"
+                            ],
+                            "completed_at_utc": training_result[
+                                "completed_at_utc"
+                            ],
+                        },
+                        indent=2,
+                    ),
+                    language="json",
+                )
+
+    st.markdown(
+        """
+<div class="public-boundary">
+  <strong>COMMAND-VIEW BOUNDARY</strong>
+  <p>The debris globe is public GP/OMM catalogue context, propagated for display—not live sensor telemetry. The RL encounter is a separate synthetic planar teaching model. Public objects are screened conceptually, never injected as asserted conjunctions. No RAF, MOD, NSpOC or spacecraft system is connected; human authority is required.</p>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 with tab_public:
     control_col, source_col = st.columns([0.75, 2.25], gap="large")
@@ -958,7 +1776,7 @@ with tab_public:
 <div class="method-rail">PUBLIC GP/OMM <span>→</span> SGP4/TEME ORBIT PICTURE <span>→</span> SOCRATES PUBLIC SCREEN <span>→</span> CANDIDATES FOR REVIEW <span>→</span> STOP: PRECISION OPERATIONAL ASSESSMENT REQUIRED</div>
 <div class="public-boundary">
   <strong>PUBLIC SCREEN ENDS HERE</strong>
-  <p>Public mean elements do not provide the precision ephemerides, covariance, object geometry, operator intent or validated procedures needed for an operational collision-risk decision. Nothing in this tab selects or recommends a manoeuvre. The synthetic policy lab in tabs 01–03 is a separate, fictional resilience case.</p>
+  <p>Public mean elements do not provide the precision ephemerides, covariance, object geometry, operator intent or validated procedures needed for an operational collision-risk decision. Nothing in this tab selects or recommends a manoeuvre. The separate synthetic policy views are a fictional resilience case.</p>
 </div>
 """,
             unsafe_allow_html=True,
@@ -988,7 +1806,7 @@ with tab_public:
             """
 <div class="public-boundary">
   <strong>PUBLIC SCREEN UNAVAILABLE</strong>
-  <p>No unvalidated value is substituted. Tabs 01–03 remain a self-contained synthetic demonstration and do not depend on public-object data.</p>
+  <p>No unvalidated value is substituted. The synthetic command, alert, options and brief views remain self-contained and do not depend on public-object data.</p>
 </div>
 """,
             unsafe_allow_html=True,

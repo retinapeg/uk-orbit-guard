@@ -1,0 +1,3 @@
+# Host-only dependency for the real Daytona training controller.
+# The remote worker itself uses the Python standard library only.
+daytona==0.207.0

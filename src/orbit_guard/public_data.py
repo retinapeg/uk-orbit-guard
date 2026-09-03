@@ -1103,7 +1103,12 @@ class Transport(Protocol):
         """Fetch exactly once and return a bounded response."""
 
 
-def urllib_transport(url: str, *, max_bytes: int) -> HttpResponse:
+def urllib_transport(
+    url: str,
+    *,
+    max_bytes: int,
+    timeout_seconds: float = 10,
+) -> HttpResponse:
     """Explicit opt-in stdlib transport; performs one request and no retries."""
 
     request = Request(
@@ -1128,7 +1133,10 @@ def urllib_transport(url: str, *, max_bytes: int) -> HttpResponse:
         opener = build_opener(
             _NoRedirectHandler(), HTTPSHandler(context=tls_context)
         )
-        response = opener.open(request, timeout=10)  # noqa: S310 - allowlisted
+        response = opener.open(  # noqa: S310 - allowlisted
+            request,
+            timeout=timeout_seconds,
+        )
     except HTTPError as exc:
         body = exc.read(max_bytes + 1)
         return HttpResponse(

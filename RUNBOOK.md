@@ -1,120 +1,216 @@
 # UK Orbit Guard — Friday runbook
 
-## Demo objective
+## Mission for the room
 
-Deliver one clear argument without depending on the network:
+Show one defensible pipeline:
 
-> In the deterministic synthetic event, acting at six hours reaches the same illustrative
-> 1.2 km margin with one-eighth of the manoeuvre demand required at 45 minutes.
+> A dated public debris field establishes scale. A separately declared
+> synthetic encounter is frozen and trained in one private Daytona sandbox.
+> The host accepts the result only after identity, scenario, runtime,
+> checkpoint, replay and cleanup checks. Parliament sees the evidence boundary
+> and the questions that remain for an authorised operator.
 
-The optional public-orbit picture adds provenance and scale. It is not allowed to become
-the critical path, and it must never be described as operational collision detection.
+The remote policy run and the fixed 8× lead-time counterfactual are two separate
+synthetic demonstrations. Neither is a claim about a real public object. The
+2,661-object CelesTrak fixture is context only and is never training input.
+
+## Evidence states: choose before presenting
+
+| Branch | Required visible state | What may be said |
+|---|---|---|
+| **L — verified current-session result** | `VERIFIED DAYTONA RESULT`, matching scenario, Gen 0→10 unlocked and run passport present | “This result was returned and validated in this app session; the sandbox was deleted.” |
+| **R — recorded prior result** | `RECORDED DAYTONA REPLAY` after pressing **LOAD LAST VERIFIED REPLAY** | “This is a host-validated prior Daytona run, replayed locally—not current live compute.” |
+| **G — Gen 0 only** | `LOCAL GEN 0 PREVIEW`, missing readiness, failed run or no recorded replay | “This is the local untrained synthetic baseline. No remote training result is being substituted.” |
+
+`DAYTONA READY` proves only that the SDK imports and a credential is present. An
+active phase proves work is in progress, not success. Repository files, tests,
+screenshots and this document are not evidence that a live run occurred.
 
 ## Thursday freeze
 
-Run these commands from the project root:
+Run from the exact project root:
 
 ```bash
 cd "/Users/leonardaarons-ditson/Documents/ChatGPT/parliament hackathon/uk-orbit-guard"
 git status --short --branch
+python3 -m venv .venv
 source .venv/bin/activate
-python --version
+python -m pip install --upgrade pip
 python -m pip install -r requirements-demo-lock.txt
-python -m compileall -q app.py src
+python -m pip install -r requirements-live.txt
+python -m compileall -q app.py src scripts
 python -m pytest -q
 python -m orbit_guard.demo --check
 git diff --exit-code -- artifacts/demo_result.json artifacts/committee_brief.md
 ```
 
-The frozen environment was tested on Python 3.11.5. Do not regenerate the exact lock,
-upgrade a package or train the inherited PPO scaffold after the final rehearsal.
+The base lock was prepared on Python 3.11.5. `requirements-live.txt` separately
+pins the host Daytona SDK. Do not upgrade packages or regenerate a lock at the
+venue. Rote is not part of the runtime and does not need installing.
 
-### Connected public-data rehearsal
+### Set `DAYTONA_API_KEY` without exposing it
 
-Do this once while a network is available, before the event—not on stage:
+Obtain the key through the user's normal Daytona account process. In the same
+zsh session that will launch Streamlit, use hidden input:
 
-1. Start the app with `./scripts/run_demo.sh` and open <http://127.0.0.1:8501>.
-2. Open **00 PUBLIC ORBIT PICTURE** and read the displayed source, retrieval time,
-   content-hash prefix and cache/replay state.
-3. If a refresh is needed, press **↻ REFRESH PUBLIC DATA IF DUE** once. Do not press it again
-   inside two hours. After any network attempt the app disables that control for two
-   hours in the current session. CelesTrak says new GP data is checked once every two
-   hours and may rate-limit excessive or erroneous requests.
-4. Confirm UK-DMC-2 is joined by `2009-041C` and catalogue `35683`; do not rely on name
-   spelling alone.
-5. In **Catalogue**, confirm the inferred display-type legend, selected object and
-   exact `PUBLIC ORBIT PICTURE / RECORDED SNAPSHOT` and
-   `CELESTRAK GP/OMM · SGP4/TEME DISPLAY REPLAY` labels; never present the shapes as
-   authoritative catalogue classifications. The inspector's **Display model** must say
-   `SGP4/TEME at snapshot retrieval time`; if it says two-body fallback, treat the globe
-   as degraded and skip it on stage.
-6. In **Proximity screen**, confirm the display is labelled as the separate bounded
-   SOCRATES OneWeb query—not a UK-DMC-2 encounter screen. Check the exact
-   `PUBLIC-ELEMENT PROXIMITY SCREEN / 7-DAY WINDOW` and
-   `CELESTRAK SOCRATES · PUBLIC GP MODEL` labels, source-modelled minimum-range/TCA
-   values, candidate counts, invalid counts and outside-horizon counts.
-7. Download **DOWNLOAD PUBLIC SNAPSHOT RECORD** and confirm it contains the full
-   source URLs, retrieval UTC, OMM epoch range, SOCRATES data-as-of UTC, canonical hash,
-   human-authority flag and `operational_collision_assessment: false`.
-8. Confirm any source error remains visible as `CACHED / DEGRADED` and does not clear a
-   last verified display or manufacture a current result.
-9. If CelesTrak returns HTTP 403/404, stop. Do not retry; use the replay and investigate
-   after the demo.
+```zsh
+read -s "DAYTONA_API_KEY?Paste Daytona API key (input hidden): "
+export DAYTONA_API_KEY
+printf '\n'
+test -n "${DAYTONA_API_KEY:-}" && echo "DAYTONA_API_KEY is set"
+```
 
-The committed fallback is `data/public_orbit_snapshot_2026-09-03.json`. A successful
-manual refresh may write `.cache/public_orbit_snapshot.json`; that uncommitted cache must
-remain self-validating and visibly distinguished from the committed historical replay.
-If the cache cannot be written, the app retains the verified in-memory refresh, labels
-the persistence failure and leaves the committed replay untouched.
+Never print, hash, paste into a command argument, commit, screenshot or save the
+value in this repository. The app displays presence only. Leave
+`DAYTONA_API_URL` unset unless the user's Daytona configuration explicitly
+requires an endpoint override.
 
-SOCRATES Plus is the public-record input to the radial visual, but the web page is not a
-stage dependency. Do not present its probability field as a UK Orbit Guard calculation,
-adopt its 5 km setting as a UK threshold or claim the bounded query reproduces its
-catalogue-wide computation.
+Start the app from that shell:
 
-### Offline rehearsal—the required proof
+```bash
+./scripts/run_demo.sh
+```
 
-After the connected check:
+Open <http://127.0.0.1:8501>. The **00 SPACE COMMAND** ribbon must say
+`DAYTONA READY`; if it says `LOCAL GEN 0 PREVIEW`, stop and fix SDK/key visibility
+before attempting a live rehearsal. Restart Streamlit after changing an
+environment variable.
 
-1. stop the Streamlit process cleanly with `Ctrl-C`;
-2. disconnect Wi-Fi/network access;
-3. start again with `./scripts/run_demo.sh`;
-4. refresh the browser and complete all four tabs;
-5. verify the public area visibly says cache/replay rather than live/current;
-6. switch between **Catalogue** and **Proximity screen**;
-7. click **RUN DETERMINISTIC SCENARIO** and wait for the integrity confirmation;
-8. exercise all four fixed synthetic options and **RESTORE JUDGE SCENARIO**;
-9. download the committee brief and synthetic evidence record; and
-10. keep the network disconnected through one full timed three-minute run.
+### Live Daytona rehearsal
 
-If the public replay cannot render offline, accept presenter branch C: skip the public
-visual and use the synthetic lab. Do not weaken or postpone the deterministic path to
-repair an optional source on stage.
+Use the default single `H-01` head-on synthetic template so the scenario hash
+will match the fallback rehearsal:
 
-### Visual and room check
+1. Read the command ribbon and the 12-character scenario-hash prefix aloud.
+2. Confirm the model card says `hill-cem-v1`, 10 generations, 24 candidates,
+   3 perturbed episodes each, 720 remote search episodes and seed 42.
+3. Press **TRAIN GEN 0 → 10 ON DAYTONA** exactly once.
+4. Watch the state ledger. The successful contract advances through
+   `QUEUED`, `CREATING`, `LIVE`, `TRAINING`, `VALIDATING`,
+   `RESULT_COLLECTED`, `CLEANED`, then `COMPLETE`. A fast run can make some
+   states brief.
+5. Do not say “completed” until the ribbon says `VERIFIED DAYTONA RESULT` and
+   the generation rail unlocks.
+6. Scrub generation 0, an intermediate generation and generation 10. Confirm
+   the animated replay and training curve render.
+7. Open **Verified Daytona run passport**. Confirm it shows a sandbox ID,
+   invocation ID, scenario and runtime-bundle hashes, different initial and
+   trained checkpoint hashes, `training_episodes: 720`,
+   `local_training_fallback_used: false`, and `sandbox_deleted: true`.
+8. Treat any missing or contradictory field as a failed proof, even if a curve
+   is visible.
+9. Confirm the recorded envelope now exists without printing it:
 
-- Use the actual laptop, charger, display adaptor, screen resolution and browser zoom.
-- Confirm the four tab names fit and the global provenance ribbon remains visible.
-- Check both public modes, the 3D controls, radio options, sliders and downloads.
-- Turn off notifications, automatic updates, screen sleep and battery-saving dimming.
-- Keep the pointer large enough to follow from the back of the room.
-- Test without browser developer tools, terminal overlays or personal tabs visible.
-- Open the dated public-context captures in advance:
-  `orbit-guard-public-catalogue.png`, `orbit-guard-public-globe.png` and
-  `orbit-guard-public-screen.png`.
-- Open the three synthetic fallbacks in advance:
-  `orbitguard_alert_fallback.jpg`, `orbitguard_options_fallback.jpg` and
-  `orbitguard_committee_fallback.jpg`.
-- Keep `artifacts/committee_brief.md` and `artifacts/demo_result.json` open locally.
+   ```bash
+   test -s .cache/daytona_rl/last_verified.json && echo "recorded replay present"
+   ```
 
-The public captures are fixed evidence of the visibly dated 3 September 2026 snapshot,
-not a current source. Use them only with that historical-replay description and their
-visible provenance; otherwise skip the public view. The synthetic screenshots remain the
-network-independent critical-path fallback.
+10. Restart the app, press **LOAD LAST VERIFIED REPLAY**, and confirm the ribbon
+    says `RECORDED DAYTONA REPLAY` with the detail “validated prior run · not
+    current live compute”.
 
-## Friday—30 minutes before presenting
+The controller creates one private, ephemeral, network-blocked sandbox with a
+12-minute TTL. Its create timeout is two minutes, worker timeout five minutes,
+and delete timeout two minutes. Venue latency can therefore exceed the speaking
+slot. Rehearse on the actual network; do not promise an exact completion time.
 
-Use the frozen checkout and environment:
+If the run fails, the UI must say `DAYTONA FAILED — no local result was
+substituted`. If deletion is not confirmed, the collected output is rejected.
+Use the Daytona account/dashboard to inspect or clean up any uncertain sandbox;
+do not call the run verified.
+
+The single-run lock at `.cache/daytona_rl/active.json` protects fresh and
+partially written launch state from a second controller. A lock older than 20
+minutes is reclaimed automatically only when no live controller PID can be
+validated. If a lock still blocks rehearsal, inspect `active.json`, the named
+run directory, `controller_pid.json`, `live_state.json` and the Daytona
+dashboard. Only after confirming that no controller or sandbox remains should
+an operator move the lock aside for diagnosis; never delete an unexplained
+fresh lock on stage.
+
+### Public-data rehearsal
+
+There are two independent public-data loaders.
+
+#### Command-centre debris field
+
+The committed file `data/debris_catalogue_snapshot_2026-09-03.json` contains
+2,661 de-duplicated public OMM records from:
+
+- FENGYUN-1C-DEBRIS: 1,963;
+- IRIDIUM-33-DEBRIS: 111; and
+- COSMOS-2251-DEBRIS: 587.
+
+Startup makes no network request. It uses a validated cache and labels it
+fresh or stale against the 12-hour retrieval TTL; when no valid cache exists,
+it uses the bundled replay. Check the exact globe source label:
+
+- `CURRENT-SESSION CELESTRAK GP FETCH` — a validated network response was used;
+- `CACHED CELESTRAK GP SNAPSHOT` — a validated cache was used; or
+- `STALE CACHED CELESTRAK GP SNAPSHOT` — a validated cache exists but is beyond
+  the 12-hour retrieval window; or
+- `BUNDLED CELESTRAK GP REPLAY` — the committed historical source record was
+  used.
+
+The default globe position track re-evaluates the loaded mean elements every
+five seconds and says `5 s DATED-ELEMENT DISPLAY PROPAGATION`. **PAUSE TRACK** freezes
+that visual clock; **RESUME TRACK** restarts it. `DISPLAYED` is the SGP4
+evaluation time, not proof that the underlying public elements are current.
+The source records have mixed epochs. Do not call the animation live telemetry,
+a complete catalogue or a conjunction screen.
+
+Use **REFRESH IF DUE** only during connected rehearsal and only when a refresh
+is genuinely needed. It requests the three allowlisted groups with a 15-second
+timeout each (45 seconds maximum serial request wait). Never repeatedly retry a
+403, 404, malformed response or venue failure. Keep the last validated record
+on screen.
+
+#### Four-object public audit view
+
+On **01 PUBLIC ORBIT PICTURE**:
+
+1. Read the source, retrieval UTC, content-hash prefix and cache/replay state.
+2. In **Catalogue**, confirm UK-DMC-2 is joined by international designation
+   `2009-041C` and catalogue number `35683`. It is a CAA-linked civil public
+   example, not a current-status or ownership claim.
+3. Confirm the inspector reports `SGP4/TEME at snapshot retrieval time`. If it
+   reports a fallback model, call the view degraded or skip it.
+4. In **Proximity screen**, read the separate SOCRATES source-as-of timestamp and
+   the labels `PUBLIC-ELEMENT PROXIMITY SCREEN / 7-DAY WINDOW` and
+   `CANDIDATES FOR FURTHER REVIEW · NO COVARIANCE · NOT A FLIGHT DECISION`.
+5. Confirm the radial zero point says `SOURCE AS-OF`, not “now”.
+6. Use **REFRESH PUBLIC DATA IF DUE** only during rehearsal. Its cache TTL and
+   session cooldown are two hours. If CelesTrak returns 403/404, stop; do not
+   retry.
+7. Download the public snapshot record and confirm its source URLs, retrieval
+   time, OMM epoch range, SOCRATES data-as-of time, hash, counts and
+   `operational_collision_assessment: false` flag.
+
+The four-object GP view and bounded SOCRATES OneWeb query are separate from the
+2,661-object command globe. The SOCRATES rows are not locally recomputed and are
+never passed to the RL worker.
+
+### Offline and recorded rehearsal
+
+This is mandatory even if the connected run succeeds:
+
+1. Keep `.cache/daytona_rl/last_verified.json` only if it came from a result that
+   passed the live rehearsal checks above.
+2. Stop Streamlit with `Ctrl-C` and start it again with the network disconnected.
+3. Complete all five tabs.
+4. Confirm the command globe says cached or bundled replay, never live fetch.
+5. Press **LOAD LAST VERIFIED REPLAY**. If no record exists, accept branch G and
+   show Gen 0 only; never manufacture or hand-edit a result.
+6. Run the separate deterministic scenario and confirm its integrity message.
+7. Exercise the four fixed 8× options and **RESTORE JUDGE SCENARIO**.
+8. Download the committee brief and synthetic evidence record.
+9. Keep the network disconnected through one full timed narration using branch
+   R or G.
+
+The Daytona SDK needs host connectivity to create a live sandbox, but recorded
+replay and Gen 0 do not. Public startup is offline by design.
+
+## Friday: 30 minutes before the slot
 
 ```bash
 cd "/Users/leonardaarons-ditson/Documents/ChatGPT/parliament hackathon/uk-orbit-guard"
@@ -125,86 +221,112 @@ python -m orbit_guard.demo --check
 ./scripts/run_demo.sh
 ```
 
-The launcher checks port 8501 before starting. If the port is occupied, it refuses to
-guess which application owns it. Do not kill an unknown process. Either close the known
-old Streamlit process or launch a fresh instance on a verified alternate port:
+If branch L is intended, set the hidden credential before the last command and
+start the real run with enough time for creation, training, validation and
+cleanup. Do not begin the spoken demo while deletion is still unconfirmed.
+
+If port 8501 is occupied, the launcher refuses to guess which process owns it.
+Close only a known stale process, or use:
 
 ```bash
 ORBITGUARD_PORT=8502 ./scripts/run_demo.sh
 ```
 
-Then open <http://127.0.0.1:8502>. Do not accidentally keep presenting the old 8501 tab.
+Then present the matching 8502 browser tab.
 
 ### Browser state
 
-1. Open each of the four tabs once.
-2. Put **00 PUBLIC ORBIT PICTURE** in **Catalogue** mode with UK-DMC-2 selected.
-3. Read the visible cache/replay state and choose presenter branch A, B or C from
-   [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
-4. Leave **Act now** selected on **02 MANOEUVRE OPTIONS**.
-5. Return to **00 PUBLIC ORBIT PICTURE**.
-6. Keep the terminal check, CLI result and local fallback files behind the browser.
-7. Run one timed rehearsal, then stop touching the environment.
+1. Open all five tabs once.
+2. Return to **00 SPACE COMMAND** with the default single `H-01` scenario.
+3. Choose branch L, R or G from the visible evidence—not from intention.
+4. For branch L, leave generation 0 selected so the Gen 0→10 story can be
+   scrubbed forward on stage.
+5. For branch R, load the record and verify the recorded ribbon before judges
+   arrive.
+6. Leave **Act now** selected on **03 MANOEUVRE OPTIONS**.
+7. Run one timed rehearsal, then stop changing code, packages, fixtures and
+   cache files.
 
-Do not on stage:
+Do not refresh CelesTrak on stage. A Daytona run may be demonstrated on stage if
+the slot and venue network permit, but never trade the whole story for waiting:
+name the current phase, continue through the other tabs, then return. If it is
+not complete, leave it labelled in progress and use the deterministic policy
+story without claiming a trained result.
 
-- press **↻ REFRESH PUBLIC DATA IF DUE**;
-- install or upgrade packages;
-- change the comparison set, cache, fixture, clock or screen parameters;
-- open NSpOC/Monitor Space Hazards, CAA or CelesTrak web pages as a dependency;
-- claim a cache is live, or hide an expired/degraded label;
-- call Daytona, depend on Rote, train PPO or invoke any external model;
-- edit the app, docs, scenarios or artefacts; or
-- improvise physical, national-performance, fuel-saving or ownership claims.
+## Stage flow
 
-Rote is not a runtime dependency for this demo and does not need to be installed for the
-Friday path.
+1. **Space Command:** name the 2,661-object public replay and the separate
+   synthetic `GUARD-1` encounter.
+2. **Training evidence:** show branch L, R or G exactly as labelled. If Gen 1–10
+   are available, scrub 0 → intermediate → 10 and show the passport.
+3. **Public Orbit Picture:** show the small CAA-linked example and bounded
+   SOCRATES candidates as public audit context.
+4. **Synthetic Alert:** cross the visible synthetic boundary.
+5. **Manoeuvre Options:** deliver the independent, constructed 8× lead-time
+   comparison.
+6. **Committee Brief:** close on coverage, delivery time, operator readiness,
+   auditability and human authority.
 
 ## Recovery order
 
-Recover the story, not every feature:
+Recover the evidence story, not every visual:
 
-1. **UI state only:** refresh the browser, return to the correct verified port and click
-   **RESTORE JUDGE SCENARIO**.
-2. **Public source/replay failure:** state presenter branch C and move to
-   **01 SYNTHETIC ALERT**. Never refresh repeatedly.
-3. **Streamlit process failed:** return to the terminal, stop the known process with
-   `Ctrl-C`, then run `./scripts/run_demo.sh`. If port 8501 is occupied, use the verified
-   8502 command above.
-4. **Visual app unavailable:** run `python -m orbit_guard.demo --check` and show the
-   verified 120 m → 1.20 km → 255 m → 1.20 km → 8× record.
-5. **Terminal unavailable:** show `artifacts/demo_result.json`, then
-   `artifacts/committee_brief.md`.
-6. **Public visual fallback:** only if useful, show Public Catalogue, Public Globe and
-   Public Screen with the words “dated public-context capture”; never call them current.
-7. **Last synthetic visual fallback:** show Alert, Options and Committee in order and
-   deliver the same deterministic narration.
+1. **Wrong UI state:** refresh the correct browser tab. Restore the default
+   command scenario or fixed judge scenario as appropriate.
+2. **Daytona not ready:** state branch G. Do not type or expose a credential in
+   front of the room.
+3. **Daytona run failed:** read the failure label. Use branch R only if a prior
+   verified replay already exists and can be loaded; otherwise remain on Gen 0.
+4. **Daytona still running:** name the visible phase, continue the other tabs,
+   and return once. Do not repeatedly click Train or call it complete.
+5. **Public source failure:** retain the cached/bundled view or skip to the
+   synthetic path. Never manufacture freshness.
+6. **Streamlit failed:** stop only the known process, relaunch, or use the
+   verified alternate-port command.
+7. **Visual app unavailable:** run `python -m orbit_guard.demo --check` and show
+   the deterministic evidence record.
+8. **Terminal unavailable:** use `artifacts/demo_result.json` and
+   `artifacts/committee_brief.md` for the independent 8× story.
 
-Never substitute a random web orbit visual, make a last-minute API call or describe a
-stale screenshot as current.
+The committed screenshots cover the older public and deterministic synthetic
+tabs, not a current Daytona run. Never use a screenshot as proof of live compute.
 
 ## Incident phrases
 
 | Situation | Safe sentence | Next action |
 |---|---|---|
-| Public cache/replay is degraded | “The optional public source is unavailable, and the prototype refuses to manufacture freshness.” | Go to **01 SYNTHETIC ALERT**. |
-| No candidates display | “An empty bounded display is not proof of safety; the source query, time window and method are limited.” | Show provenance briefly, then continue. |
-| Candidate looks extremely close | “That is SOCRATES's public source-modelled minimum range, not a UK Orbit Guard collision probability or safety decision.” | Point to the no-covariance boundary. |
-| Someone calls UK-DMC-2 an RAF asset | “It is a CAA-linked civil public example; we make no military ownership or current-status claim.” | Move to the synthetic boundary. |
+| `LOCAL GEN 0 PREVIEW` | “The untrained synthetic baseline is local; no Daytona result is being implied.” | Continue with Gen 0 or the deterministic policy tabs. |
+| `DAYTONA READY` | “The host can request a sandbox, but no run has started.” | Start only if the slot permits. |
+| Active run | “The sandbox workflow is currently in the visible **phase**; completion has not yet been claimed.” | Continue the narrative and return once. |
+| Daytona failed | “The remote run failed and the prototype did not substitute local training.” | Use recorded replay if already verified, otherwise Gen 0. |
+| Recorded replay | “This is a validated prior Daytona replay, not current live compute.” | Show passport provenance and keep the label visible. |
+| Public replay is old | “The source record is historical; SGP4 display propagation does not manufacture current telemetry.” | Point to origin, retrieval time and element epochs. |
+| Candidate looks close | “That is a dated public source-modelled minimum range, not our collision probability or a flight decision.” | Point to the no-covariance boundary. |
 | Asked for a manoeuvre | “This prototype issues none; current validated data and the authorised operator are required.” | Show the hard-stop language. |
-| Display or app fails | “The core result is deterministic and independently verified; I’ll show the local evidence record.” | Use recovery steps 4–6. |
 
-## Integrity boundary—read before presenting
+## Close-down
 
-- Public GP elements, bounded SOCRATES public model rows and CAA metadata only; no
-  restricted, classified or live sensor feed.
-- Declared comparison set only; no complete-catalogue or custody claim.
-- Approximate SGP4/TEME positions for the four-object globe; no local pairwise detector.
-- Parsed, bounded SOCRATES Plus candidate rows for the radial display; no reproduction
-  of the source service's catalogue-wide computation.
-- No covariance, hard-body radius, collision probability or safety classification.
-- No real protected asset and no public object in the synthetic 8× encounter.
-- No autonomous manoeuvre, command link, interception, targeting or hostile attribution.
-- No RAF, MOD, Parliament, NSpOC, UKSA, CAA, CelesTrak or operator endorsement.
-- No guarantee of safety, collision prevention, fuel saving or service availability.
+1. Confirm any branch-L passport says `sandbox_deleted: true`.
+2. Stop Streamlit with `Ctrl-C`.
+3. Remove the credential from the shell:
+
+   ```bash
+   unset DAYTONA_API_KEY
+   ```
+
+4. Do not delete a verified recorded replay needed for the event. Do not commit
+   `.cache/` or any credential-bearing file.
+
+## Non-negotiable boundaries
+
+- The 2,661 records are a dated subset from three public debris-event groups,
+  not all tracked objects and not 2,661 collision threats.
+- Public mean elements are not sensor telemetry or precise operator ephemerides.
+- The RL input is synthetic and independent from all public records.
+- CEM reward improvement is not collision-probability reduction, safety
+  assurance, manoeuvre advice or national-performance evidence.
+- No covariance, hard-body radius, validated real TCA, secondary screening,
+  thruster constraints, command link, targeting or hostile attribution exists.
+- No RAF, MOD, Parliament, NSpOC, UKSA, CAA, CelesTrak, Daytona or operator
+  endorsement is claimed.
 - Human operational authority is required before every real decision.

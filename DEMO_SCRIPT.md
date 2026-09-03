@@ -1,231 +1,277 @@
-# UK Orbit Guard — three-minute Parliament demo
+# UK Orbit Guard — three-minute command-centre script
 
-## The one sentence to land
+This script works with any honest compute state. Before speaking, read the
+**00 SPACE COMMAND** ribbon and choose one branch:
 
-> In this transparent synthetic event, six hours of actionable warning reaches the
-> same illustrative 1.2 km margin with one-eighth of the manoeuvre demand required
-> at 45 minutes—showing Parliament why trusted warning latency is a resilience issue.
+- **L:** `VERIFIED DAYTONA RESULT` — current-session result;
+- **R:** `RECORDED DAYTONA REPLAY` — host-validated prior result; or
+- **G:** `LOCAL GEN 0 PREVIEW` — no remote result available.
 
-Always say **public-element context**, **candidate for further review**, **synthetic
-event**, **illustrative margin** and **manoeuvre-budget demand**. Never say live tracking,
-collision detected, threat, safe pass, RAF satellite, fuel saved, autonomous avoidance or
-recommended manoeuvre.
+Do not choose by what was intended. Choose by what the interface proves. A
+`DAYTONA READY` ribbon means a run can be requested; it does not mean one
+occurred.
 
-## Before the clock starts
+## 0:00–0:35 — public scale, explicit boundary
 
-- Load **00 PUBLIC ORBIT PICTURE** in its tested offline/cache state.
-- Read the visible source time and cache/replay label; do not memorise a moving epoch.
-- Set the public mode to **Catalogue** with UK-DMC-2 selected.
-- Confirm the inspector says `SGP4/TEME at snapshot retrieval time`; otherwise use the
-  degraded/skip branch rather than narrating SGP4.
-- Do not press **↻ REFRESH PUBLIC DATA IF DUE** on stage.
-- Keep **Act now** selected on **02 MANOEUVRE OPTIONS**.
+Open **00 SPACE COMMAND**. Keep the globe and injection console visible.
 
-## Exact three-minute path
+Say:
 
-### 0:00–0:18 — Establish trust
+> “This is UK Orbit Guard: a defensive space-resilience prototype that takes us
+> from conjunction context to parliamentary scrutiny. The globe begins with a
+> dated public CelesTrak record: 2,661 GP/OMM records returned by three
+> debris-event group queries, propagated with SGP4 for display.”
 
-Point to the global provenance ribbon.
+Point to the source ribbon and then to `GUARD-1`.
 
-> “This is UK Orbit Guard: a public-data prototype for defensive space resilience.
-> It uses no restricted feed, has no command link and is not for flight operations.
-> The public picture and the synthetic policy experiment remain visibly separate.”
+> “Those public mean elements are context—not live sensors, not a complete
+> catalogue and not 2,661 threats. `GUARD-1` and the incoming object are a
+> separate synthetic local encounter. No public object is passed into the RL
+> model.”
 
-### 0:18–0:48 — Show a real public-data chain
+Do not say that the public globe performed a local conjunction screen. The
+buttons create deterministic fictional encounter templates.
 
-In **00 PUBLIC ORBIT PICTURE**, keep **Catalogue** selected. Rotate the globe once and
-point to `PUBLIC ORBIT PICTURE / RECORDED SNAPSHOT` and
-`CELESTRAK GP/OMM · SGP4/TEME DISPLAY REPLAY`, not just the animation.
+## 0:35–1:15 — Gen 0→10 evidence
 
-> “Here is a dated public orbital picture built from CelesTrak GP elements and
-> approximate SGP4 propagation. Our civil example is UK-DMC-2: the CAA's public UK
-> Registry and CelesTrak join on designator 2009-041C and catalogue number 35683.
-> That proves provenance—not current status, military ownership or RAF use.”
+Point to the model card:
 
-Point out that diamond, square and cross encode a display type inferred from the public
-name—payload, rocket body or debris. Say:
+> “The training contract is fixed: a planar Hill/LVLH teaching model, five
+> discrete thrust actions, 10 generations, 24 candidate policies and three
+> perturbed episodes per candidate—720 remote search episodes at seed 42.”
 
-> “That shape is a visual aid, not an authoritative source classification. This is a
-> declared four-object public subset, not the complete tracked population.”
+Then use the correct branch.
 
-### 0:48–1:10 — Reveal the screening logic
+### Branch L — verified current-session result
 
-Switch the public mode to **Proximity screen** and point to
-`PUBLIC-ELEMENT PROXIMITY SCREEN / 7-DAY WINDOW` and
-`CELESTRAK SOCRATES · PUBLIC GP MODEL`.
+Say:
 
-> “This view deliberately changes source. It visualises a bounded OneWeb-filtered set
-> of dated public candidate rows from CelesTrak SOCRATES Plus; it is not a local screen
-> of UK-DMC-2. Radius is SOCRATES's source-modelled minimum range, angle is its reported
-> closest-approach time relative to the displayed SOCRATES source-as-of timestamp, and
-> shape is a display type inferred from the public object name.”
+> “This result came back through the Daytona controller in this app session.
+> The host matched the sandbox, scenario and frozen runtime bundle, rejected an
+> unchanged checkpoint, validated every generation replay, collected the result
+> and confirmed sandbox deletion.”
 
-Point to the no-covariance boundary.
+Scrub generation **0**, one intermediate generation, then **10**. Press **PLAY**
+once on the encounter chart if time permits. Point to the training curve and
+minimum simulated clearance, but call them synthetic nominal replay values—not
+risk reduction or a flight recommendation. Open the run passport briefly and
+point to `sandbox_deleted: true` and
+`local_training_fallback_used: false`.
 
-> “UK Orbit Guard does not rerun the catalogue-wide calculation, adopt SOCRATES's five
-> kilometre setting as a UK threshold or calculate its own collision probability. A
-> candidate is public context for further review—not a flight decision.”
+### Branch R — recorded prior result
 
-### 1:10–1:32 — Cross the synthetic boundary
+Keep the recorded ribbon visible and say:
 
-Open **01 SYNTHETIC ALERT** and point to the synthetic badge.
+> “This is a host-validated prior Daytona replay, not current live compute. The
+> same strict result envelope lets us inspect Gen 0 through Gen 10 without
+> pretending that venue connectivity is evidence.”
 
-> “Now we deliberately leave every public object behind. This fictional encounter
-> starts at a 120 metre projected miss with six hours of actionable warning. The one
-> kilometre buffer is an illustrative teaching target, not an RAF, NSpOC, CAA or
-> operator threshold.”
+Scrub generation **0**, one intermediate generation, then **10**. Open the run
+passport briefly. Do not call the sandbox currently active or the run current.
 
-Click **RUN DETERMINISTIC SCENARIO** and wait for the integrity confirmation.
+### Branch G — Gen 0 only
 
-### 1:32–2:08 — Deliver the 8× reveal
+Keep the warning visible and say:
 
-Open **02 MANOEUVRE OPTIONS**.
+> “The live requirement is not satisfied, so the prototype stays at the local
+> untrained Gen 0 baseline. It does not fabricate Gen 1–10 and does not relabel
+> local training as Daytona.”
 
-1. Select **Act now**: point to `0.05 m/s`, `6 h`, `1.20 km`.
-2. Select **Wait, same burn**: point to `0.05 m/s`, `45 min`, `255 m`.
-3. Select **Wait, recover margin**: point to `0.40 m/s`, `45 min`, `1.20 km`.
+Point to the locked generation rail, then continue. This is a credible failure
+mode, not a reason to improvise a result.
 
-> “The same small demand applied late no longer recovers the margin. At 45 minutes,
-> this constructed model needs 0.40 metres per second—eight times the 0.05 used at
-> six hours—to reach the same 1.2 kilometres.”
+## 1:15–1:45 — inspectable public evidence
 
-Point to the explicit explanation.
+Open **01 PUBLIC ORBIT PICTURE** in **Catalogue** mode.
 
-> “Why exactly eight? Required delta-v is inverse to lead time in this ideal linear
-> illustration, and six hours divided by 45 minutes is eight. That is a transparent
-> teaching result, not measured operational performance.”
+Say:
 
-### 2:08–2:42 — Move from orbit to scrutiny
+> “The audit view is deliberately smaller. UK-DMC-2 is joined by public
+> identifiers—international designation 2009-041C and catalogue number 35683—
+> between the CAA registry and CelesTrak. That is a civil regulatory/catalogue
+> link, not a claim about present mission status, military ownership or
+> endorsement.”
 
-Open **03 COMMITTEE BRIEF**.
+Switch to **Proximity screen** only if it is already rehearsed.
 
-> “The defensive benefit is resilient access to space-enabled services, not targeting.
-> NSpOC is jointly led by UK Space Agency and UK Space Command and combines civil and
-> military space-domain awareness. Earlier usable warning can preserve operator decision
-> time and lower-demand options for services on which public bodies, industry and defence
-> depend.”
+> “This separate bounded SOCRATES view plots source-reported public candidates
+> relative to its visible source-as-of time. It is candidate for further review:
+> no local covariance calculation, no UK Orbit Guard collision probability and
+> no flight decision.”
 
-Point to **Evidence confidence ladder**.
+The command globe's 2,661 records, this four-object catalogue, and the bounded
+SOCRATES rows are three different sets. Never merge their counts or imply the
+SOCRATES view screened `GUARD-1`.
 
-> “The first two public layers are available here. Precision ephemeris, covariance,
-> geometry and command authority are not—and the interface refuses to infer them.”
+## 1:45–2:10 — cross into the synthetic policy fixture
 
-Scroll past **SYNTHETIC OFFLINE FIXTURE** to **Synthetic committee headline**. This is
-the deliberate handoff from public context to the constructed result.
+Open **02 SYNTHETIC ALERT** and point to the synthetic badge.
 
-Point to the three cards.
+Say:
 
-> “Parliament should ask: do priority services receive actionable warning early enough;
-> how quickly does trusted information reach the responsible operator; and are decisions
-> and outcomes auditable enough to test whether resilience investment works?”
+> “Now we cross the visible boundary into a second, fully fictional teaching
+> case. Its protected service, object, alert, six-hour lead time and 120-metre
+> miss counterfactual come from a versioned local fixture—not the public globe
+> and not the Daytona reward.”
 
-### 2:42–3:00 — Close on the boundary
+If helpful, press **RUN DETERMINISTIC SCENARIO** and wait for the integrity
+confirmation. It is local and makes no network or API call.
 
-Point to the downloadable evidence record.
+## 2:10–2:40 — one transparent policy result
 
-> “UK Orbit Guard turns public provenance and one inspectable counterfactual into a
-> committee-ready question. But its authority stops at candidate for further review.
-> Current precise data, covariance, collision probability, secondary screening and the
-> authorised operator are required before any real decision. Conjunction to committee—
-> with a human always in authority.”
+Open **03 MANOEUVRE OPTIONS** with **Act now** selected.
 
-Stop. Do not add an improvised claim after the final boundary.
+Say:
 
-## Presenter-safe public-data branches
+> “In the declared ideal linear model, acting at six hours with 0.05 metres per
+> second reaches an illustrative 1.2-kilometre projected margin. Waiting until
+> 45 minutes needs 0.40 metres per second to recover the same margin. Six hours
+> divided by 45 minutes equals eight, so this is an eight-times
+> manoeuvre-budget-demand comparison.”
 
-Use exactly one branch based on the label visible in the app.
+Briefly select **Wait: same burn** to show 255 m, then restore **Act now**.
 
-### A — Verified cache inside the two-hour TTL
+> “That 8× is constructed arithmetic, not an observed Daytona result, fuel
+> saving, collision-probability reduction or measured national performance.”
 
-Use this for `LATEST PUBLIC FETCH` or a fresh `CACHED PUBLIC SNAPSHOT`.
+Do not call the illustrative 1 km line an NSpOC or operator threshold.
 
-> “This is a dated CelesTrak public snapshot retrieved at the UTC time shown. The
-> two-hour cache avoids unnecessary repeat requests. It is public-element context,
-> not a live sensor picture.”
+## 2:40–3:00 — committee close
 
-Do not call it “live”, even if it was refreshed minutes ago.
+Open **04 COMMITTEE BRIEF** and point to the evidence ladder.
 
-### B — Committed historical replay or expired cache
+Say:
 
-Use this for `BUNDLED PUBLIC SNAPSHOT` or a visibly stale/degraded cache.
+> “The investment question is not whether a prototype can command a satellite.
+> It cannot. Parliament should ask whether warning coverage is sufficient,
+> whether trusted information reaches the responsible operator early enough,
+> whether operators can respond within their real constraints, and whether
+> decisions and outcomes are auditable.”
 
-> “For demo reliability we are replaying the dated, verified snapshot labelled here.
-> The reference time is fixed, so nothing is being passed off as current. The same
-> strict source parsing, SGP4 catalogue globe and SOCRATES candidate display are shown
-> offline.”
+Finish with:
 
-If the interface says `CACHED / DEGRADED`, state the displayed reason once and continue.
+> “UK Orbit Guard's authority stops at candidate for further review. Current
+> validated observations, covariance, object geometry, collision probability,
+> secondary screening, coordination and the authorised human operator are
+> required before any real decision.”
 
-### C — Public tab has no valid display
+## Optional on-stage live-run branch
 
-> “The optional public source is unavailable, and the prototype refuses to manufacture
-> freshness. I will continue with the independently verified synthetic policy lab.”
+Use this only when `DAYTONA READY` is visible, the credential was set before the
+room, and the schedule allows unpredictable network latency.
 
-Move directly to **01 SYNTHETIC ALERT**. The 120 m → 1.20 km → 255 m → 1.20 km → 8×
-story is the demo-critical path.
+1. Keep the default one-object synthetic scenario.
+2. Press **TRAIN GEN 0 → 10 ON DAYTONA** once.
+3. Say: “A private sandbox has been requested; I will name only the phase the
+   interface proves.”
+4. Point to `CREATING`, `LIVE`, `TRAINING`, `VALIDATING`,
+   `RESULT_COLLECTED`, `CLEANED` or `COMPLETE` as each appears. Some may be too
+   brief to show.
+5. Continue tabs 01–04 rather than waiting silently.
+6. Return once. If `VERIFIED DAYTONA RESULT` is present, use branch L. If the
+   run is still active, call it in progress and finish without Gen 1–10. If it
+   failed, use the exact failure wording below.
 
-## Safe answers to likely questions
+Never click Train twice. Never describe an active run as complete. Never allow
+a live add-on to consume the hard-stop close.
 
-### “Is this detecting a real collision?”
+## Failure lines to memorise
 
-> “No. The globe approximately propagates four public GP objects for context, while the
-> radial view visualises dated candidate fields already published by SOCRATES. UK Orbit
-> Guard performs no local pairwise detector or probability calculation. Operational
-> assessment needs current better orbit data, covariance, object geometry and an
-> authorised process.”
+### Daytona credential or SDK unavailable
 
-### “Is UK-DMC-2 an RAF or protected military satellite?”
+> “The live requirement is unavailable, so Gen 1–10 remain locked. What you see
+> is the explicitly labelled local Gen 0 baseline; no remote result has been
+> invented.”
 
-> “No such claim is made. It is a civil public example linked by designator and catalogue
-> number across the CAA register and CelesTrak. The synthetic protected service is
-> fictional and separate.”
+### Daytona execution fails
 
-### “Why mention the RAF?”
+> “The remote Daytona path failed, and the controller substituted no local
+> training. I can show a labelled prior verified replay if one exists, or remain
+> at Gen 0.”
 
-> “Because UK Space Command is the defence co-lead of NSpOC and defence relies on
-> space-enabled services. The claimed benefit is decision time and service resilience,
-> not ownership of this prototype or of the example satellite.”
+### Recorded replay loads
 
-### “Does the nearest point mean the greatest risk?”
+> “This is a host-validated prior Daytona replay—not current live compute.”
 
-> “No. Range alone is not probability. Without covariance and object geometry the chart
-> only orders SOCRATES's source-modelled minimum ranges for further review.”
+### Public catalogue is cached or bundled
 
-### “Does SOCRATES validate this?”
+> “The app is using a dated validated public record and says so. Retrieval age
+> and element epoch remain visible evidence limits.”
 
-> “No. Its bounded public rows are the source input for the radial visual, but that does
-> not validate UK Orbit Guard or make the records operational ground truth. We preserve
-> the source method and stop before a probability or decision.”
+### Public refresh fails
 
-### “Are these candidate rows close approaches to UK-DMC-2?”
+> “The optional public source is unavailable. The prototype retains the last
+> validated record rather than manufacturing freshness.”
 
-> “No. UK-DMC-2 is the CAA-linked example in the four-object globe. The radial display
-> is a separately labelled, bounded OneWeb query from SOCRATES. We do not join the two
-> into a manufactured event.”
+### No public candidates appear
 
-### “Is two hours the accuracy window?”
+> “An empty bounded display is not evidence of safety. The source query, time
+> window and method are limited.”
 
-> “No. Two hours is the source-refresh and cache rule. Each element has its own epoch,
-> and neither freshness measure makes public GP data operational.”
+### A public candidate appears very close
 
-### “Why exactly 8×?”
+> “That is the source model's reported minimum range, not a collision
+> probability, verified threat or manoeuvre instruction.”
 
-> “In the synthetic linear equation, displacement is delta-v times lead time. Six hours
-> is eight times 45 minutes, so recovering the same displacement late requires eight
-> times the delta-v: 0.40 divided by 0.05.”
+### Asked whether the policy prevented a collision
 
-### “Can it tell an operator what to do?”
+> “No such claim is supported. It changed a trajectory in a synthetic nominal
+> replay under declared assumptions; operational risk needs current precise data
+> and authorised analysis.”
 
-> “No. It has no command path and issues no manoeuvre advice. It ends at a transparent
-> candidate and a policy question; the qualified operator retains authority.”
+## Likely questions
 
-## Numbers that never change on stage
+### “What is actually reinforcement learning here?”
 
-| Option | Projected miss | Δv | Lead time |
-|---|---:|---:|---:|
-| Hold course | 120 m | 0.00 m/s | 6 h |
-| Act now | 1.20 km | 0.05 m/s | 6 h |
-| Wait, same burn | 255 m | 0.05 m/s | 45 min |
-| Wait, recover margin | 1.20 km | 0.40 m/s | 45 min |
+> “A linear five-action policy is optimised from complete synthetic episode
+> returns using cross-entropy policy search. The observation has satellite
+> state, nearest-object relative state, time-to-closest-approach and miss proxies,
+> object count and episode progress. It is intentionally small enough to audit.”
 
-Delay penalty in the constructed comparison: **8.0×**.
+### “Why Daytona?”
+
+> “It provides a separate, short-lived execution boundary. The host captures and
+> hashes the worker bundle, sends the frozen scenario, downloads the result,
+> validates it against the actual sandbox identity and then requires deletion.
+> The value is verifiable execution provenance, not an accuracy claim.”
+
+### “Are all 2,661 public objects debris fragments or training examples?”
+
+> “No. They are public mean-element records returned by three named CelesTrak
+> debris-event group queries. Each group result includes its named parent object
+> as well as debris. Training uses only one to six button-generated synthetic
+> local objects.”
+
+### “Did this run live today?”
+
+Use only the matching answer:
+
+- branch L: “This app session shows a verified result and its run passport.”
+- branch R: “No current live claim; this is a validated prior replay.”
+- branch G: “No; only the local untrained baseline is shown.”
+
+### “Does it connect to NSpOC or an RAF system?”
+
+> “No. There is no NSpOC, RAF, MOD, operator, telemetry or command-system
+> connection. Those organisations are policy context, not integrations or
+> endorsements.”
+
+### “What would make it operational?”
+
+> “Current validated observations or operator ephemerides, covariance and
+> hard-body geometry, verified conjunction analysis, manoeuvre and mission
+> constraints, secondary screening, coordination, secure integration,
+> governance, audit and the authorised operator's decision.”
+
+## Never say
+
+- “These are 2,661 collision threats.”
+- “The public catalogue trained the agent.”
+- “The model predicts a real collision.”
+- “The agent found the safest manoeuvre.”
+- “The curve proves collision-risk reduction.”
+- “This is a live NSpOC/RAF feed.”
+- “The 1 km line is an operational threshold.”
+- “The recorded replay is live.”
+- “The sandbox completed” before validation and confirmed deletion.
+- “Daytona failed, so we trained locally instead.”

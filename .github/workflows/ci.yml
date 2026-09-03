@@ -19,6 +19,31 @@ jobs:
           cache: pip
       - name: Install project and test dependencies
         run: python -m pip install -r requirements-demo-lock.txt
+      - name: Install pinned Daytona live dependency
+        run: python -m pip install -r requirements-live.txt
+      - name: Smoke-import pinned Daytona SDK without credentials
+        run: |
+          env -u DAYTONA_API_KEY -u DAYTONA_API_URL python - <<'PY'
+          import importlib.metadata
+          import os
+
+          from daytona import CreateSandboxFromSnapshotParams, Daytona
+          from orbit_guard.daytona_rl import runtime_status
+
+          assert "DAYTONA_API_KEY" not in os.environ
+          assert "DAYTONA_API_URL" not in os.environ
+          assert importlib.metadata.version("daytona") == "0.207.0"
+          assert Daytona is not None
+          assert CreateSandboxFromSnapshotParams is not None
+          assert runtime_status() == {
+              "sdk_installed": True,
+              "sdk_version": "0.207.0",
+              "version_compatible": True,
+              "credential_present": False,
+              "api_url_overridden": False,
+              "ready": False,
+          }
+          PY
       - name: Compile Python sources
         run: python -m compileall -q app.py src
       - name: Run tests

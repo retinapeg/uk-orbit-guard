@@ -1,69 +1,179 @@
 # Data, provenance and limitations
 
-UK Orbit Guard keeps public catalogue context and the fictional policy
-counterfactual separate in code, labels, visuals and narration. Neither layer is an
-operational collision-avoidance service.
+UK Orbit Guard joins several evidence classes in one interface without merging
+their authority. The command globe is public catalogue context. The local
+encounter, policy search and fixed lead-time comparison are synthetic. Daytona
+is an execution boundary, not an operational data source or an accuracy claim.
 
-## Data classes
+Nothing in the prototype is a collision alert, collision-probability
+calculation, manoeuvre recommendation, command link or safety certification.
 
-| Data class | Purpose | What it can support | What it cannot support |
+## Evidence classes
+
+| Evidence class | What is present | What it can support | What it cannot support |
 |---|---|---|---|
-| CelesTrak public GP elements | Dated public orbit context from OMM-keyed JSON, with legacy TLE as a documented provider format | Approximate SGP4/TEME positions for the bounded 3D globe | Complete catalogue coverage, a local conjunction detector, precise ephemerides, covariance, safety status or manoeuvre advice |
-| CAA public register metadata | Link one named public example to a UK regulatory record | Explain why UK-DMC-2 is a defensible UK-linked civil example | Current operational status, priority/protected status, military or RAF ownership, endorsement or control |
-| CelesTrak SOCRATES Plus | Dated public conjunction-candidate input for the radial screen | Visualise source-reported object identity, TCA, minimum range and relative speed with provenance | Become a local collision probability, validate this prototype, import an operational threshold, or turn a candidate into a flight decision |
-| Synthetic JSON fixture | Repeatable lead-time policy counterfactual | Demonstrate the constructed 8× manoeuvre-demand comparison | Describe any real object, alert, orbit, operator, mission or national performance |
-| Dated NSpOC/UKSA/Parliament publications | Policy context and aggregate counts | Motivate scrutiny questions | Provide a live feed or evidence that this prototype has operational access |
+| Command-centre CelesTrak debris catalogue | Dated GP/OMM records from three named debris-event groups | Visual public-orbit scale and approximate SGP4 display positions | A complete catalogue, sensor custody, a local conjunction screen, current precise ephemerides, covariance, safety status or manoeuvre advice |
+| Four-object CelesTrak GP/OMM snapshot | Bounded public records including UK-DMC-2 | Inspectable small public catalogue example | Representation of the 2,661-record debris field or a claim that the four objects encounter one another |
+| CAA register metadata | UK-DMC-2 identifiers and public function description | A defensible UK-linked civil regulatory/catalogue example | Current mission status, protected priority, military ownership, control or endorsement |
+| CelesTrak SOCRATES Plus rows | Dated, bounded public source-report records | Visualise source-reported object identity, TCA, minimum range and relative speed | Reproduce the source's catalogue-wide computation, become a local collision probability, establish safety or trigger a manoeuvre |
+| Synthetic Hill/LVLH RL encounter | One to six deterministic injection templates, controlled satellite state, actions and rewards | Demonstrate a small auditable policy-search workflow | Describe a real object, real orbit, real conjunction, mission constraint or operational manoeuvre |
+| Daytona execution evidence | Captured worker bundle, frozen synthetic request, sandbox identity, result and cleanup fields | Show that a bounded synthetic job ran inside the identified sandbox when the current run passport proves it | Validate the physics, convert synthetic results into operational advice, or prove that a run occurred merely because code exists |
+| Synthetic lead-time fixture | Versioned fictional alert and four fixed options | Demonstrate the constructed 8× manoeuvre-demand comparison | Represent the RL reward, any public object, measured performance or fuel/risk saving |
+| NSpOC, UKSA and Parliament publications | Dated policy context and published aggregates | Motivate resilience and scrutiny questions | Provide a live feed, operational access or endorsement of this prototype |
 
-The demo uses no restricted or classified data, no Space-Track credentials, no NSpOC
-or Monitor Space Hazards account, and no spacecraft telemetry or command link.
+The demo uses no restricted or classified data, Space-Track credentials, NSpOC
+or Monitor Space Hazards account, operator telemetry, command link, hostile
+attribution or targeting data.
 
-## Visible provenance labels
+## The three sets that must never be conflated
 
-These labels are boundaries, not decoration:
+1. **2,661 command-globe records** — a committed public CelesTrak debris-event
+   snapshot. These objects provide visual context only.
+2. **Four public catalogue records plus three stored SOCRATES candidates** — the
+   separate audit view under **01 PUBLIC ORBIT PICTURE**.
+3. **One to six synthetic hazards** — deterministic local templates created by
+   the command buttons and used by the RL worker.
 
-- global: `PUBLIC-DATA PROTOTYPE · NO RESTRICTED FEEDS · NO COMMAND · NOT FOR FLIGHT OPERATIONS`;
-- public snapshot source: `CelesTrak public GP/OMM and SOCRATES Plus`;
-- public snapshot context: `Public GP/OMM proximity context only; not operational collision assessment.`;
-- load origin: `LATEST PUBLIC FETCH`, `CACHED PUBLIC SNAPSHOT` or
-  `BUNDLED PUBLIC SNAPSHOT`;
-- catalogue view: `PUBLIC ORBIT PICTURE / RECORDED SNAPSHOT` and
-  `CELESTRAK GP/OMM · SGP4/TEME DISPLAY REPLAY`;
-- candidate view: `PUBLIC-ELEMENT PROXIMITY SCREEN / 7-DAY WINDOW` and
-  `CELESTRAK SOCRATES · PUBLIC GP MODEL`;
-- public globe: `PUBLIC-ELEMENT CONTEXT · APPROXIMATE PROPAGATION · NO RESTRICTED DATA`;
-- public radial screen: `CANDIDATES FOR FURTHER REVIEW · NO COVARIANCE · NOT A FLIGHT DECISION`;
-- handoff boundary: `PUBLIC SCREEN ENDS HERE`;
-- degraded public state: `CACHED / DEGRADED` plus the reason;
-- synthetic tabs: `SYNTHETIC OFFLINE FIXTURE` and `SEPARATE FROM ALL PUBLIC OBJECTS`.
+No identifier or orbit is copied from sets 1 or 2 into set 3. The phrase
+“screened synthetic encounter” describes the UI workflow, not a claim that the
+public catalogue was screened into a real encounter.
 
-The public modes are named **Catalogue** and **Proximity screen**. “Candidate” means a
-dated public record parsed from the SOCRATES Plus source and retained inside the display's
-declared horizon. It must not be relabelled as an operational alert, collision, threat,
-hazard, safe pass or manoeuvre target.
+## Public pipeline A: command-centre debris catalogue
 
-For every public snapshot or replay, read the summary ribbon/inspector and use the
-downloadable public snapshot record for the full provenance:
+### Committed fixture
 
-| Provenance field | Required interpretation |
+`data/debris_catalogue_snapshot_2026-09-03.json` is a strict, integrity-bound
+snapshot constructed from these exact CelesTrak public GP endpoints:
+
+- `https://celestrak.org/NORAD/elements/gp.php?GROUP=FENGYUN-1C-DEBRIS&FORMAT=JSON`
+- `https://celestrak.org/NORAD/elements/gp.php?GROUP=IRIDIUM-33-DEBRIS&FORMAT=JSON`
+- `https://celestrak.org/NORAD/elements/gp.php?GROUP=COSMOS-2251-DEBRIS&FORMAT=JSON`
+
+| Fixture field | Committed value |
 |---|---|
-| **Data class / source** | Public GP elements from CelesTrak; never NSpOC or sensor data |
-| **Exact source URLs / bounded object set** | Defines the fetched GP objects and SOCRATES query; the globe is not the entire tracked population |
-| **Retrieved at (UTC)** | When the response was obtained, not the element observation time |
-| **Element epoch** | Epoch carried by each GP record; mixed epochs and record age matter |
-| **Cache/replay state and age** | Distinguishes a fresh cache, expired cache and committed historical replay |
-| **Reference time** | The time at which positions and the declared horizon are evaluated |
-| **Method** | SGP4 and TEME kilometre vectors for the globe; source-modelled SOCRATES fields for the radial screen |
-| **Screen contract** | Persisted SOCRATES data-current timestamp, bounded source query and declared display horizon |
-| **Counts** | Fetched, valid, propagation-error, invalid, outside-horizon and displayed counts |
-| **Use flags** | Public records preserve `operational_collision_assessment: false`; the synthetic record separately preserves `operational_use: false` |
+| Record type | `uk-orbit-guard-public-debris-catalogue` |
+| Schema version | `1` |
+| Retrieval UTC | `2026-09-03T12:01:51Z` |
+| Unique records after NORAD-ID de-duplication | `2,661` |
+| Display classification from the returned names | `2,658` names ending ` DEB`; `3` named parent objects |
+| FENGYUN-1C-DEBRIS | `1,963` |
+| IRIDIUM-33-DEBRIS | `111` |
+| COSMOS-2251-DEBRIS | `587` |
+| Earliest OMM epoch in the fixture | `2026-08-04T16:45:09.696960Z` |
+| Latest OMM epoch in the fixture | `2026-09-03T05:27:55.916928Z` |
+| Canonical content SHA-256 | `e16d8db7f52ebecebfbd6d6d20bef570e1bddd25042238fafbce2f944a9df398` |
 
-The two-hour cache rule governs **network retrieval**, not orbit accuracy. A response
-inside the cache TTL is not automatically suitable for operations, and a recent retrieval
-can still contain elements with older epochs.
+These counts and timestamps describe the committed replay only. A future
+validated refresh can return a different count, membership and element-epoch
+range. Each result includes its named parent object (`FENGYUN 1C`, `IRIDIUM 33`
+or `COSMOS 2251`) as well as debris records. “2,661 public objects” therefore
+means 2,661 unique records returned by the three chosen debris-event group
+queries. In this fixture, 2,658 names end in ` DEB` and three are the named
+parent objects. It does not mean 2,661 debris fragments, all tracked objects,
+all debris, all UK-relevant objects, or 2,661 conjunction threats.
+
+The canonical digest covers schema, record type, retrieval timestamp, exact
+allowlisted source URLs and every retained OMM record. It detects corruption or
+an unaccompanied change when checked against a separately reviewed digest, such
+as the value in this document or a trusted Git commit. It does not authenticate
+CelesTrak, certify source accuracy or resist an attacker able to rewrite both
+the records and their in-file digest.
+
+### Load and refresh contract
+
+The default call is `load_catalogue(allow_network=False)`. Startup therefore
+makes **zero network requests**. Load order is:
+
+1. validated cache at `.cache/debris_catalogue.json` if its retrieval timestamp
+   is within the inclusive 12-hour TTL;
+2. otherwise, the newer validated source between the stale cache and committed
+   bundled replay; or
+3. an explicit unavailable error when neither source validates.
+
+Only the human-operated **REFRESH IF DUE** button calls
+`load_catalogue(allow_network=True)`. A due refresh performs one request with a
+15-second timeout for each of the three exact allowlisted URLs, bounding the
+serial request wait to 45 seconds. It rejects unexpected redirects and
+non-200 responses, strictly parses OMM records, de-duplicates by NORAD catalogue
+ID, enforces a maximum of 5,000 combined records and atomically writes a
+validated cache.
+
+The 12-hour value is a prototype retrieval/cache rule. It is not a statement of
+CelesTrak publication frequency, orbit accuracy, conjunction freshness or
+operational suitability. The separate four-object public snapshot uses a
+different two-hour retrieval rule.
+
+If a source refresh fails, the interface retains the last validated source
+record when available and shows a warning. Repeated venue retries are not a
+recovery strategy. A cache/replay label must remain visible.
+
+### SGP4 command-globe display
+
+`catalogue_globe_records` applies SGP4 to each public mean-element record for a
+declared display timestamp and returns Earth-centred TEME kilometre vectors.
+The UI labels that timestamp `DISPLAYED`. It is the propagation evaluation time,
+not the observation time, source retrieval time or proof of present telemetry.
+
+In the current command view, the default position track re-evaluates the loaded
+elements at wall-clock time every five seconds. **PAUSE TRACK** freezes that
+visual clock and **RESUME TRACK** restarts it. This can project a bundled
+historical record beyond its retrieval time. `5 s DATED-ELEMENT DISPLAY
+PROPAGATION` therefore describes the display calculation, not a live source.
+The provenance label still determines whether the input is a current-session
+fetch, cache, stale cache or bundled replay, and the underlying mixed element
+epochs remain the accuracy boundary. Never turn “displayed now” into “observed
+now”.
+
+Rows whose SGP4 propagation reports an error are omitted from the display. If
+the displayed-object count differs from the validated catalogue count, describe
+the globe as degraded and do not infer anything from missing points.
+
+The globe also embeds the final synthetic `GUARD-1` local offset on an
+illustrative 550 km reference orbit. That visual co-location does not give the
+synthetic object a real Earth-centred orbit and does not establish proximity to
+any public debris point.
+
+## Public pipeline B: four-object audit snapshot
+
+The separate `data/public_orbit_snapshot_2026-09-03.json` fixture contains:
+
+- UK-DMC 2 (`35683`);
+- ISS (`25544`);
+- PHISAT 2 (`60470`);
+- AC1-002 (`66745`); and
+- three parsed rows from the bounded SOCRATES query
+  `NAME=oneweb,&ORDER=TCA&MAX=5`.
+
+It is a four-object visual context, not a screening population. The SOCRATES
+rows do not describe a screen of UK-DMC-2 against those four objects.
+
+| Fixture field | Committed value |
+|---|---|
+| Source label | `CelesTrak public GP/OMM and SOCRATES Plus` |
+| Retrieval UTC | `2026-09-03T09:21:39Z` |
+| OMM epoch range | `2026-09-02T05:00:29.030112Z` to `2026-09-02T23:28:27.723360Z` |
+| SOCRATES source data as of | `2026-09-02T06:33:00Z` |
+| Contents | 4 OMM objects; 3 SOCRATES candidates |
+| Canonical snapshot SHA-256 | `205e1928755de30a36d2f3514e56a04e604b7ae1942b759b23c68e6942038d4d` |
+
+Startup is also offline/cache-first. A human may press **REFRESH PUBLIC DATA IF
+DUE**; a validated cache inside the inclusive two-hour TTL is reused, and any
+network attempt starts a two-hour UI cooldown. Successful data must pass strict
+schema, size, identity, URL and value checks. An HTTP 403/404 is not retried.
+The uncommitted cache path is `.cache/public_orbit_snapshot.json`.
+
+For the committed historical fixture, globe positions are replayed with SGP4 at
+the snapshot retrieval time rather than silently promoted to current wall-clock
+positions. A per-record simplified fallback, when required, is explicitly
+labelled and must not be described as SGP4.
+
+The digest binds schema, context, source label and URLs, retrieval time, OMM
+epoch bounds, SOCRATES data-as-of time and both record sets. The digest field
+alone is excluded. Integrity proves coherence, not operational quality.
 
 ## CAA-linked public example: UK-DMC-2
 
-The public example is joined on identifiers rather than a name guess:
+The small public view joins identifiers rather than guessing from a name:
 
 | Source | Name | International designator | Catalogue number | Public description |
 |---|---|---|---:|---|
@@ -71,165 +181,186 @@ The public example is joined on identifiers rather than a name guess:
 | CelesTrak public GP query | `UK-DMC 2` | `2009-041C` | `35683` | Public GP element record |
 
 The [CAA register entry](https://www.caa.co.uk/data-and-publications/publications/documents/content/cap2207/)
-records the object because it is in the UK Registry of Outer Space Objects. The
+supports the UK regulatory link. The
 [CelesTrak query](https://celestrak.org/NORAD/elements/gp.php?CATNR=35683&FORMAT=JSON-PRETTY)
-supplies public GP elements when a manual refresh is permitted. The app records the
-element epoch returned at retrieval time; this document intentionally does not freeze a
-moving epoch value.
+supports the public catalogue link.
 
-This linkage says nothing about whether the object is currently operational, what
-services it presently supports, whether it is nationally protected, or who would make a
-current manoeuvre decision. It does not imply Parliament, CAA, UKSA, MOD or RAF
-ownership, tasking, endorsement or access.
+This says nothing about current operational status, service availability,
+national protection priority, present ownership or who would make a manoeuvre
+decision. It does not imply Parliament, CAA, UKSA, MOD or RAF access, tasking,
+control or endorsement.
 
-## Public-source acquisition and cache
+## Public pipeline C: bounded SOCRATES display
 
-[CelesTrak documents](https://celestrak.org/NORAD/documentation/gp-data-formats.php)
-public general-perturbations queries in TLE and OMM-related formats. The prototype
-prefers OMM-keyed JSON because it has explicit field names and is not constrained to
-five-digit catalogue numbers. CelesTrak describes its JSON and CSV representations as
-using OMM keywords; it recommends standard OMM XML for safety-critical systems. This
-prototype is expressly non-operational.
+The radial display does not run a local all-pairs detector. It parses stored
+public SOCRATES Plus rows and visualises:
 
-The allowlisted globe snapshot is intentionally small: UK-DMC 2 (`35683`), ISS
-(`25544`), PHISAT 2 (`60470`) and AC1-002 (`66745`). It is a four-object visual context,
-not a screening population. The separate radial input is the bounded CelesTrak SOCRATES
-query `NAME=oneweb,&ORDER=TCA&MAX=5`, whose source report declares its own seven-day
-computation interval. That OneWeb-filtered report is not a screen centred on UK-DMC-2.
+- radius: the source-modelled minimum range, shown with a logarithmic display
+  transform while retaining physical distance labels;
+- clockwise angle: reported TCA relative to the stored SOCRATES data-as-of time;
+- shape: a display type inferred from the public name, not authoritative source
+  classification; and
+- counts: displayed, invalid and outside the declared seven-day horizon.
 
-The retrieval contract is deliberately conservative:
+The zero-time tick is labelled `SOURCE AS-OF`, not “now”. A close-looking point
+is a small source-modelled minimum range in a dated public model output. It is
+not an orbital plane, risk score, probability, decision threshold or evidence
+of collision. Absence from the bounded view is not evidence of safety.
 
-1. The Friday default makes zero network requests. It loads a self-verifying local cache
-   when one exists, otherwise the committed historical replay, and labels the origin.
-2. A human may press **↻ REFRESH PUBLIC DATA IF DUE** during rehearsal or development.
-3. A verified cache no older than two hours (the TTL boundary is inclusive) is reused
-   instead of calling the source.
-4. A successful GP/OMM and SOCRATES response must pass strict schema, size and value
-   checks before replacing the verified cache.
-5. A timeout, malformed response, HTTP 403/404 or other source
-   error leaves the last verified cache/replay in place and displays a degraded reason.
-6. The interface does not automatically retry. After a manual network attempt—successful
-   or failed—the refresh control is disabled for two hours in that app session. CelesTrak
-   says it checks for new GP data once every two hours and rate-limits excessive or
-   erroneous requests.
+[CelesTrak SOCRATES Plus](https://celestrak.org/SOCRATES/) publishes public
+information about pending conjunction candidates using its documented public
+GP model. UK Orbit Guard does not reproduce its catalogue-wide calculation,
+adopt its source setting as a UK threshold, recompute its maximum-probability
+field, or treat it as operational validation. It is not a conjunction data
+message (CDM), operator ephemeris or covariance-aware assessment.
 
-“Latest public snapshot” means latest successfully verified snapshot available to the
-prototype. It never means live sensor data. “Historical replay” means positions are
-reproduced against the fixture's recorded reference time; the fixture is not projected
-from its old epoch to the wall-clock present and presented as current.
+## Synthetic RL model
 
-The committed replay is `data/public_orbit_snapshot_2026-09-03.json`. A successful
-manual refresh may update the uncommitted runtime cache at
-`.cache/public_orbit_snapshot.json`; the two-hour TTL, strict validation and canonical
-snapshot SHA-256 travel with the snapshot provenance. The digest binds the schema,
-context, source label and URLs, retrieval UTC, earliest/latest OMM epochs, SOCRATES
-data-as-of UTC and both record sets; only the digest field itself is excluded.
+### Scenario
 
-### Committed Friday replay provenance
+The command buttons build one to six allowlisted deterministic templates:
 
-| Field | Fixed fixture value |
-|---|---|
-| Source label | `CelesTrak public GP/OMM and SOCRATES Plus` |
-| Retrieval UTC | `2026-09-03T09:21:39Z` |
-| OMM epoch range | `2026-09-02T05:00:29.030112Z` to `2026-09-02T23:28:27.723360Z` |
-| SOCRATES data as of | `2026-09-02T06:33:00Z` |
-| Bounded contents | 4 OMM objects; 3 parsed SOCRATES candidates |
-| Canonical snapshot SHA-256 | `205e1928755de30a36d2f3514e56a04e604b7ae1942b759b23c68e6942038d4d` |
+- `head_on`;
+- `crossing`; and
+- `fast_debris`.
 
-These values describe the committed historical fixture only. A verified runtime cache
-has its own displayed retrieval time, epoch range, data-as-of time and hash. The fixed
-fixture must never be called current or live on Friday.
+The controlled synthetic satellite begins at the origin of a planar Hill/LVLH
+local encounter frame around an illustrative 550 km circular reference orbit.
+The injected objects follow constant-velocity local paths. The satellite follows
+a semi-implicit discrete integration of the planar Clohessy-Wiltshire/Hill
+equations.
 
-## Public pipeline A: GP/OMM catalogue globe
+Default episode constants:
 
-The 3D globe and radial screen have different source methods. For the globe, UK Orbit
-Guard:
+| Parameter | Value |
+|---|---:|
+| Time step | 20 s |
+| Maximum steps | 72 |
+| Horizon | 1,440 s / 24 min |
+| Illustrative keep-out radius | 0.35 km |
+| Commanded acceleration magnitude | 0.000005 km/s² = 0.005 m/s² |
+| Impulse per held thrust step | 0.10 m/s |
+| Maximum injected objects | 6 |
 
-1. loads and strictly validates the four allowlisted public OMM-keyed records;
-2. identifies UK-DMC-2 by designator `2009-041C` and catalogue number `35683`;
-3. uses the recorded snapshot/replay reference time rather than silently substituting the
-   wall-clock present;
-4. propagates positions with the installed SGP4 implementation and checks its error code;
-5. supplies Earth-centred TEME positions in kilometres to the visual; and
-6. surfaces the source, retrieval time, OMM epoch range and any degraded state.
+The keep-out radius is a synthetic termination rule, not an operator, NSpOC,
+CAA, RAF or CelesTrak standard.
 
-SGP4 here drives visual public-orbit context only. It does **not** pair objects, calculate
-relative distance, prune a wider catalogue or generate a conjunction candidate. If SGP4
-is unavailable, any simplified two-body display must be visibly degraded and evaluated
-at element epoch; it must not be described as SGP4, current or operational.
+### Observation and action spaces
 
-The Python SGP4 documentation distinguishes the propagator's numerical precision from
-the much larger prediction uncertainty of public mean elements. A correct library call
-therefore does not make the source orbit precise or suitable for safety decisions.
+The fixed 12-component observation contains:
 
-### What the catalogue globe shows
+1. satellite radial and along-track position;
+2. satellite radial and along-track velocity;
+3. nearest-risk object's relative position;
+4. nearest-risk object's relative velocity;
+5. clipped time-to-closest-approach proxy;
+6. miss-distance proxy;
+7. object-count fraction; and
+8. episode progress.
 
-- Earth-centred TEME kilometre positions at the recorded reference time;
-- display type inferred from the public object name and encoded by shape/legend; this is
-  not an authoritative source classification;
-- a selected-object role distinct from a review-candidate role;
-- trails only for the selected and review objects; and
-- a visible empty or cached/degraded state when records are unavailable.
+All policies have 65 parameters: five actions × (12 observations + one bias).
+The five deterministic discrete actions are `COAST`, `RADIAL OUT`, `RADIAL IN`,
+`PROGRADE` and `RETROGRADE`.
 
-It is not to encounter-analysis scale, does not show sensor custody and is only the four
-allowlisted objects—not a complete map of the tracked population.
+### Reward and termination
 
-## Public pipeline B: SOCRATES Plus candidate screen
+Each step begins with a small survival term and subtracts declared penalties for
+proximity, use of thrust and large local displacement. A keep-out breach at or
+below 0.35 km adds a large penalty and terminates the episode; reaching the
+horizon adds a synthetic completion bonus. The displayed “minimum simulated
+clearance” is the smallest sampled step separation in this model, not continuous
+TCA, hard-body clearance or collision probability.
 
-The radial display does not run a local all-pairs screen. UK Orbit Guard strictly parses
-the bounded public SOCRATES Plus response, validates the source report's computation
-interval, persists its data-current timestamp, and transforms each valid row into a
-visual candidate record.
-The source fields include object identifiers, TCA, minimum range, relative speed and a
-public maximum-probability field. The prototype does not recompute, promote or present
-that source probability as its own operational conclusion.
+Optimising this reward does not guarantee maximum clearance, minimum fuel,
+robust control or monotonic improvement. The retained checkpoint is selected by
+nominal synthetic validation reward. The training plot shows population mean
+return and retained-policy replay return; neither line is a safety curve.
 
-The radial screen shows:
+### Cross-entropy policy search
 
-- radius: SOCRATES's source-modelled minimum range, displayed on a log transform while
-  retaining physical km/m labels;
-- clockwise angle: the source TCA relative to the stored SOCRATES data-as-of timestamp
-  within the declared display horizon;
-- shape: a transparent payload/rocket-body/debris display type inferred from the public
-  name, with unknown as a separate class;
-- smallest source-modelled ranges first, with the first three candidates labelled; and
-- separate counts for invalid data and objects outside the declared horizon.
+The fixed stage job uses:
 
-It is not an orbital plane, probability plot, risk score or decision boundary. Visual
-closeness to the centre means only a smaller minimum range in the dated SOCRATES public
-model output. It is not evidence of a collision, and absence from the bounded display is
-not evidence of safety.
+- seed 42;
+- generation 0 as the all-zero `COAST` baseline;
+- 10 training generations;
+- 24 candidates per generation;
+- 3 perturbed episodes per candidate; and
+- 720 executed search episodes, plus deterministic validation replays.
 
-## SOCRATES is an input, not operational validation
+Training samples policy weights from an evolving Gaussian distribution and
+updates its mean and spread from the elite candidates. Perturbations alter each
+synthetic object's starting position by at most ±0.12 km and scale each velocity
+component by 0.94–1.06. This is lightweight cross-entropy episodic policy search,
+not the inherited PPO scaffold.
 
-[CelesTrak SOCRATES Plus](https://celestrak.org/SOCRATES/) publishes regular information
-about pending conjunctions over the coming week. Its published methodology says it runs
-active payloads against the public unclassified GP catalogue three times per day using
-SGP4 and reports encounters within its own 5 km setting. CelesTrak also warns that
-minimum distance without position covariance can exaggerate true risk and explains the
-additional assumptions behind its maximum-probability field.
+The result is rejected if no policy parameter changed from Gen 0. A changed
+checkpoint proves the search produced different parameters; it does not prove
+the learned policy is operationally useful.
 
-UK Orbit Guard uses bounded rows from that public report as input to the radial display;
-it does not reproduce SOCRATES's catalogue-wide computation. The prototype does not
-adopt its 5 km setting as a local or UK operational threshold, treat its probability
-field as UK Orbit Guard's calculation, claim full-report coverage, or treat absence from
-the bounded OneWeb query as safety. The source is public GP-model context—not a CDM,
-operator ephemeris or validation of this hackathon prototype. Covariance-aware operational
-assessment remains a separate step.
+## Daytona lifecycle and evidence
 
-## Synthetic policy fixture
+The host-only SDK is pinned in `requirements-live.txt` as
+`daytona==0.207.0`. The sandbox worker itself uses the Python standard library.
+`DAYTONA_API_KEY` must contain a non-blank value in the Streamlit process and
+the installed SDK must match `0.207.0` for the live control to unlock. The app
+checks presence only and never intentionally displays the credential value.
 
-`scenarios/uk_eo_demo_1.json` is wholly fictional. Its protected asset, secondary object,
-alert, service role and manoeuvre options exist only to make the counterfactual
-reproducible. Every generated record includes:
+A requested run:
 
-- scenario ID and scenario-file SHA-256;
-- `synthetic: true` and `operational_use: false`;
-- model version, seed and assumptions; and
-- the human-operator approval gate.
+1. freezes the deterministic hazards and scenario SHA-256;
+2. captures `rl_core.py` and `daytona_rl_worker.py` and computes a runtime-bundle
+   SHA-256;
+3. creates one private, ephemeral Daytona sandbox with outbound networking
+   blocked, auto-stop disabled and a 12-minute TTL;
+4. uploads the frozen worker files and JSON request, then has the sandbox worker
+   independently recompute the same sorted-file runtime digest before training;
+5. runs the worker with a five-minute command timeout;
+6. checks the remote result metadata against a 10 MB ceiling, then downloads it;
+7. validates the exact schema, sandbox ID, invocation ID, scenario and runtime
+   hashes, model constants, action/observation dimensions, training counts,
+   timestamps, checkpoint change, reward sums, trajectories, object identities
+   and non-operational flags;
+8. waits for explicit sandbox deletion; and
+9. only then returns a result marked `result_validated: true`,
+   `sandbox_deleted: true` and `local_training_fallback_used: false`.
 
-The model uses constant relative velocity in a two-dimensional local encounter plane. An
-ideal instantaneous cross-track impulse produces:
+The state ledger can show `QUEUED`, `CREATING`, `LIVE`, `TRAINING`,
+`VALIDATING`, `RESULT_COLLECTED`, `CLEANED`, `COMPLETE` or `FAILED`.
+An intermediate state is not evidence of completion. If cleanup cannot be
+confirmed, collected output is rejected.
+
+The sandbox-side bundle digest detects transfer corruption or unexpected file
+replacement between capture and execution. It is an integrity cross-check, not
+cryptographic attestation of Daytona's platform or host.
+
+Per-run host files are stored under
+`.cache/daytona_rl/<invocation-id>/` as a request, live-state ledger, result
+envelope and controller log. The latest accepted envelope may be copied to
+`.cache/daytona_rl/last_verified.json`. These are local runtime artefacts and
+must not contain or substitute for the API key.
+
+The UI contracts are:
+
+- `VERIFIED DAYTONA RESULT` — current app session received an accepted result;
+- `RECORDED DAYTONA REPLAY` — a prior accepted envelope was loaded, explicitly
+  not current live compute;
+- `LOCAL GEN 0 PREVIEW` — only the deterministic untrained baseline is present;
+  and
+- `DAYTONA FAILED — no local result was substituted` — the remote route failed.
+
+This repository state and its unit tests do not establish that any live sandbox
+was created. Only current credential-backed runtime evidence and its run passport
+support that claim.
+
+## Separate synthetic lead-time fixture
+
+`scenarios/uk_eo_demo_1.json` is wholly fictional and is not the RL scenario.
+Its protected asset, secondary object, alert, service role and manoeuvre options
+exist only to make a policy counterfactual reproducible. Every generated record
+includes its scenario hash, `synthetic: true`, `operational_use: false`, model
+version, seed, assumptions and human-approval gate.
+
+The ideal model uses:
 
 ```text
 cross-track displacement = Δv × actionable lead time
@@ -245,33 +376,57 @@ Therefore:
 0.40 m/s ÷ 0.05 m/s         =     8×
 ```
 
-The 8× result is an intentionally constructed inverse-lead-time comparison. It is not
-measured operational performance. Δv is a manoeuvre-demand proxy—not fuel percentage,
-cost, mission-life impact or probability reduction.
+The 8× value is an intentionally constructed inverse-lead-time comparison. It
+is not learned by Daytona, measured operational performance, fuel percentage,
+cost, mission-life impact or collision-probability reduction.
 
-## Exclusions and hard stop
+## Visible label dictionary
 
-Neither layer includes:
+| Label | Required interpretation |
+|---|---|
+| `CURRENT-SESSION CELESTRAK GP FETCH` | Validated response from the three public debris group URLs; still not telemetry or operational data |
+| `CACHED CELESTRAK GP SNAPSHOT` | Validated runtime cache; “cached” must remain visible |
+| `STALE CACHED CELESTRAK GP SNAPSHOT` | Validated cache beyond the 12-hour retrieval window; degraded age remains visible |
+| `BUNDLED CELESTRAK GP REPLAY` | Committed historical source record; never call it current |
+| `5 s DATED-ELEMENT DISPLAY PROPAGATION` | A wall-clock display calculation over loaded mean elements; never live observation or telemetry |
+| `PUBLIC MEAN-ELEMENT CONTEXT · NOT SENSOR TELEMETRY` | Command-globe data boundary |
+| `DAYTONA READY` | SDK and key presence only; no run evidence |
+| `LIVE DAYTONA COMPUTE` | Current invocation in progress; phase-specific evidence only |
+| `VERIFIED DAYTONA RESULT` | Accepted current-session result and confirmed deletion |
+| `RECORDED DAYTONA REPLAY` | Accepted prior record; not current live compute |
+| `LOCAL GEN 0 PREVIEW` | Local untrained baseline; no remote result |
+| `PUBLIC-ELEMENT PROXIMITY SCREEN / 7-DAY WINDOW` | Bounded dated SOCRATES display, not a local detector |
+| `SOURCE AS-OF` | SOCRATES reference time, not wall-clock now |
+| `CANDIDATES FOR FURTHER REVIEW` | Limit of prototype authority |
+| `SYNTHETIC OFFLINE FIXTURE` | Start of the separate fixed 8× counterfactual |
+
+## Operational exclusions and hard stop
+
+The prototype does not include:
 
 - operational orbit determination or tracking-sensor fusion;
-- precise operator ephemerides, covariance or conjunction data messages (CDMs);
-- continuous TCA solving, hard-body radii or collision-probability calculation;
-- atmospheric density and space-weather uncertainty beyond the source model;
-- thruster, attitude, communications, execution or payload constraints;
+- precise operator ephemerides, covariance or conjunction data messages;
+- continuous TCA solving, hard-body radii or collision probability;
+- validated atmospheric density or space-weather uncertainty;
+- thruster, attitude, communications, payload or mission constraints;
 - post-manoeuvre orbit determination or secondary-conjunction assessment;
-- multi-operator coordination, licensing decisions or manoeuvre authority;
-- hostile-object attribution, targeting, interception or autonomous command; or
-- fuel, cost, mission-life or claimed national-performance estimates.
+- operator-to-operator coordination, licensing decisions or manoeuvre authority;
+- secure integration with NSpOC, RAF, MOD, CAA or an operator;
+- hostile-object attribution, interception, targeting or autonomous command; or
+- verified fuel, cost, mission-life or national-performance estimates.
 
-The prototype's authority ends at **candidate for further review**. Before any operational
-decision, the authorised operator and appropriate operational service would need current
-validated data, covariance and object geometry; compute an appropriate TCA and collision
-probability; consider operational constraints and secondary conjunctions; coordinate as
-required; and retain the human decision. [Monitor Space Hazards](https://www.monitor-space-hazards.service.gov.uk/)
-provides eligible UK-licensed operators and government users with operational services;
-UK Orbit Guard has no access to it.
+The prototype's authority ends at **candidate for further review**. Before any
+operational decision, the authorised operator and appropriate operational
+service would need current validated data, covariance and object geometry;
+compute an appropriate TCA and collision probability; assess mission and
+execution constraints and secondary conjunctions; coordinate as required; and
+retain human decision authority.
 
-## Authoritative sources
+[Monitor Space Hazards](https://www.monitor-space-hazards.service.gov.uk/)
+provides eligible UK-licensed operators and government users with operational
+services. UK Orbit Guard has no access to it.
+
+## Authoritative public sources
 
 1. [CAA: licences granted and registers of space objects](https://www.caa.co.uk/space/about-the-space-team/licences-granted-and-registers-of-space-objects/)
 2. [CAA CAP 2207: UK Registry of Outer Space Objects](https://www.caa.co.uk/data-and-publications/publications/documents/content/cap2207/)
@@ -284,3 +439,5 @@ UK Orbit Guard has no access to it.
 9. [NASA CARA: conjunction-event prediction](https://www.nasa.gov/cara/step-1-conjunction-event-prediction/)
 10. [NASA CARA: close-approach risk assessment](https://www.nasa.gov/cara/step-2-close-approach-risk-assessment/)
 11. [NSpOC: role and mission sets](https://www.gov.uk/government/organisations/national-space-operations-centre/about)
+12. [RAF: UK Space Command](https://www.raf.mod.uk/what-we-do/uk-space-command/)
+13. [UK Parliament: Space Resilience inquiry](https://committees.parliament.uk/committee/111/national-security-strategy-joint-committee/news/217022/security-in-space-committee-launches-new-inquiry-on-space-resilience/)
