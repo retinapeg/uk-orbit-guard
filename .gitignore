@@ -12,5 +12,7 @@ dist/
 .pytest_cache/
 .mypy_cache/
 .coverage
+.cache/
+.playwright-mcp/
 artifacts/*.zip
 .streamlit/secrets.toml

@@ -52,7 +52,8 @@ def test_committee_brief_is_bounded_and_actionable() -> None:
     assert "8.0× the manoeuvre-budget demand" in brief
     assert "six hours divided by 45 minutes equals eight" in brief
     assert "not measured operational performance" in brief
-    assert "qualified operators and NSpOC" in brief
+    assert "NSpOC provides warning and" in brief
+    assert "authorised operator's validated process and decision authority" in brief
     assert "proposed scrutiny metrics" in brief
     assert "collision-probability calculation" in brief
 

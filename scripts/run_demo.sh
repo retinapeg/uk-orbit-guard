@@ -11,12 +11,12 @@ if [[ ! "$demo_port" =~ ^[0-9]+$ ]] || (( demo_port < 1024 || demo_port > 65535 
 fi
 
 if [[ ! -x "$python_bin" ]]; then
-  echo "Demo environment missing. Run: python3 -m venv .venv && source .venv/bin/activate && python -m pip install -r requirements-dev.txt" >&2
+  echo "Demo environment missing. Run: python3 -m venv .venv && source .venv/bin/activate && python -m pip install -r requirements-demo-lock.txt" >&2
   exit 1
 fi
 
-if ! "$python_bin" -c "import streamlit, orbit_guard" 2>/dev/null; then
-  echo "Demo dependencies missing. Activate .venv and run: python -m pip install -r requirements-dev.txt" >&2
+if ! "$python_bin" -c "import sgp4, streamlit, orbit_guard" 2>/dev/null; then
+  echo "Demo dependencies missing. Activate .venv and run: python -m pip install -r requirements-demo-lock.txt" >&2
   exit 1
 fi
 

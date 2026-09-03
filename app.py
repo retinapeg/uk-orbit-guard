@@ -1,8 +1,10 @@
-"""UK Orbit Guard — striking, offline Parliament hackathon demonstration."""
+"""UK Orbit Guard — public-orbit context and synthetic Parliament policy lab."""
 
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
+from html import escape
 from math import pi
 from pathlib import Path
 
@@ -30,6 +32,21 @@ from orbit_guard.evidence import (
     MONTHLY_COLLISION_RISKS_URL,
     PUBLIC_EVIDENCE,
 )
+from orbit_guard.public_data import (
+    DEFAULT_CACHE_PATH,
+    DEFAULT_FIXTURE_PATH,
+    REFRESH_TTL,
+    PublicDataError,
+    PublicSnapshotStore,
+    SnapshotLoadResult,
+    snapshot_to_globe_records,
+    snapshot_to_screen_candidates,
+    urllib_transport,
+)
+from orbit_guard.public_visuals import (
+    build_public_catalogue_globe,
+    build_public_proximity_screen,
+)
 from orbit_guard.scenario_io import load_scenario, scenario_sha256
 
 ROOT = Path(__file__).resolve().parent
@@ -42,6 +59,35 @@ record = build_record(
     scenario_file_sha256=scenario_sha256(SCENARIO_PATH),
 )
 brief = build_committee_brief(record)
+
+CELESTRAK_GP_DOCS_URL = (
+    "https://celestrak.org/NORAD/documentation/gp-data-formats.php"
+)
+CELESTRAK_SOCRATES_URL = "https://celestrak.org/SOCRATES/"
+CAA_CAP2207_URL = (
+    "https://www.caa.co.uk/data-and-publications/publications/documents/content/cap2207/"
+)
+SPACE_TRACK_DOCS_URL = "https://www.space-track.org/documentation"
+UTC = timezone.utc
+PUBLIC_REFRESH_COOLDOWN = REFRESH_TTL
+
+UK_PUBLIC_REGISTRY_CONTEXT: dict[int, dict[str, str]] = {
+    35_683: {
+        "registry": "CAA CAP2207",
+        "designation": "2009-041C",
+        "function": "Disaster-monitoring catalogue example",
+    },
+    60_470: {
+        "registry": "CAA CAP2207 v17",
+        "designation": "2024-149C",
+        "function": "Earth observation",
+    },
+    66_745: {
+        "registry": "CAA CAP2207 v17",
+        "designation": "2025-276CH",
+        "function": "Data collection",
+    },
+}
 
 st.set_page_config(
     page_title="UK Orbit Guard",
@@ -74,8 +120,8 @@ st.markdown(
 }
 
 [data-testid="stHeader"] { background: transparent; }
-[data-testid="stToolbar"] { right: 1rem; }
-.block-container { max-width: 1440px; padding-top: 1.25rem; padding-bottom: 4rem; }
+[data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu { display:none !important; }
+.block-container { max-width: 1440px; padding-top: .7rem; padding-bottom: 4rem; }
 html, body, [class*="css"] { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 h1, h2, h3 { font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-serif !important; letter-spacing: .02em; }
 
@@ -84,32 +130,32 @@ h1, h2, h3 { font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-s
   justify-content: center;
   align-items: center;
   gap: .55rem;
-  margin: 0 0 1rem;
-  padding: .48rem .8rem;
-  border: 1px solid rgba(251, 75, 92, .58);
+  margin: 0 0 .62rem;
+  padding: .36rem .7rem;
+  border: 1px solid rgba(34, 211, 238, .44);
   border-radius: 999px;
-  color: #fecdd3;
-  background: rgba(127, 29, 29, .23);
+  color: #cffafe;
+  background: linear-gradient(90deg, rgba(8,47,73,.72), rgba(15,23,42,.88), rgba(8,47,73,.72));
   font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-serif;
-  font-size: .9rem;
+  font-size: .76rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
-  box-shadow: 0 0 30px rgba(251, 75, 92, .10);
+  box-shadow: 0 0 30px rgba(34, 211, 238, .10);
 }
 
 .classification .pulse {
-  width: .55rem; height: .55rem; border-radius: 50%; background: var(--red);
-  box-shadow: 0 0 0 0 rgba(251,75,92,.65); animation: pulse 2s infinite;
+  width: .48rem; height: .48rem; border-radius: 50%; background: var(--gold);
+  box-shadow: 0 0 0 0 rgba(251,191,36,.65); animation: pulse 2s infinite;
 }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(251,75,92,.6); } 70% { box-shadow: 0 0 0 9px rgba(251,75,92,0); } 100% { box-shadow: 0 0 0 0 rgba(251,75,92,0); } }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,.6); } 70% { box-shadow: 0 0 0 9px rgba(251,191,36,0); } 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); } }
 
 .hero {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(34, 211, 238, .28);
   border-radius: 22px;
-  padding: 1.35rem 1.6rem 1.45rem;
+  padding: .78rem 1.25rem .88rem;
   background:
     linear-gradient(100deg, rgba(6, 16, 35, .97), rgba(8, 47, 73, .68)),
     repeating-linear-gradient(90deg, transparent 0, transparent 39px, rgba(34,211,238,.03) 40px);
@@ -121,12 +167,12 @@ h1, h2, h3 { font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-s
   box-shadow: 0 0 0 35px rgba(34,211,238,.035), 0 0 0 85px rgba(34,211,238,.02);
 }
 .eyebrow { color: var(--cyan-soft); font-size: .78rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
-.hero-title { margin: .1rem 0 0; font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-serif; font-size: clamp(3rem, 6vw, 5.5rem); line-height: .9; font-weight: 700; letter-spacing: -.02em; }
+.hero-title { margin: .04rem 0 0; font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-serif; font-size: clamp(2.25rem, 4vw, 4.15rem); line-height: .92; font-weight: 700; letter-spacing: -.02em; }
 .hero-title span { color: var(--cyan); text-shadow: 0 0 24px rgba(34,211,238,.25); }
-.hero-sub { margin: .65rem 0 .8rem; max-width: 820px; color: #d8e5f5; font-size: 1.08rem; line-height: 1.5; }
+.hero-sub { margin: .35rem 0 .42rem; max-width: 980px; color: #d8e5f5; font-size: .96rem; line-height: 1.42; }
 .hero-meta { color: var(--muted); font-family: monospace; font-size: .77rem; }
-.mission-strip { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.9rem; }
-.mission-chip { padding:.35rem .62rem; border:1px solid rgba(34,211,238,.2); border-radius:6px; background:rgba(2,6,23,.48); color:#bfeef6; font-size:.76rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
+.mission-strip { display:flex; flex-wrap:wrap; gap:.38rem; margin-top:.5rem; }
+.mission-chip { padding:.25rem .52rem; border:1px solid rgba(34,211,238,.2); border-radius:6px; background:rgba(2,6,23,.48); color:#bfeef6; font-size:.68rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
 
 [data-testid="stMetric"] {
   border: 1px solid rgba(148, 163, 184, .16);
@@ -175,7 +221,28 @@ h1, h2, h3 { font-family: "Arial Narrow", "Aptos Display", ui-sans-serif, sans-s
 .source-card p { color:#aebdd0; font-size:.85rem; line-height:1.45; }
 .source-card a { color:#7dd3fc; font-size:.8rem; }
 
-.stTabs [data-baseweb="tab-list"] { gap:.55rem; margin-top:1rem; }
+.data-ribbon { display:flex; flex-wrap:wrap; gap:.45rem; align-items:center; margin:.6rem 0 .8rem; padding:.7rem .85rem; border:1px solid rgba(34,211,238,.28); border-left:4px solid var(--cyan); border-radius:10px; background:rgba(4,20,39,.8); color:#dbeafe; font-family:monospace; font-size:.76rem; }
+.data-ribbon strong { color:#67e8f9; letter-spacing:.08em; }
+.data-pill { padding:.22rem .45rem; border:1px solid rgba(148,163,184,.2); border-radius:999px; color:#b8c7da; background:rgba(2,6,23,.52); }
+.orbit-inspector { padding:1.05rem 1.1rem; border:1px solid rgba(34,211,238,.24); border-radius:14px; background:linear-gradient(160deg,rgba(8,47,73,.52),rgba(4,12,28,.94)); min-height:450px; }
+.orbit-inspector h3 { margin:.15rem 0 .55rem; font-size:1.65rem; }
+.orbit-inspector .object-id { color:#67e8f9; font-family:monospace; font-size:.78rem; }
+.orbit-inspector .limit { margin-top:.8rem; padding:.65rem; border:1px solid rgba(251,191,36,.35); background:rgba(69,45,4,.22); color:#fde68a; font-size:.76rem; line-height:1.45; }
+.candidate-stack { display:flex; flex-direction:column; gap:.48rem; margin:.4rem 0 .7rem; }
+.candidate-row { display:grid; grid-template-columns:2.15rem minmax(0,1fr) auto; gap:.55rem; align-items:center; padding:.6rem .68rem; border:1px solid rgba(148,163,184,.17); border-left:3px solid rgba(34,211,238,.7); border-radius:9px; background:linear-gradient(110deg,rgba(8,47,73,.38),rgba(2,6,23,.78)); }
+.candidate-rank { color:#67e8f9; font:700 1.05rem monospace; }
+.candidate-pair { min-width:0; color:#eef6ff; font-size:.78rem; font-weight:700; line-height:1.25; }
+.candidate-meta { margin-top:.2rem; color:#8297b0; font:500 .64rem monospace; line-height:1.25; }
+.candidate-range { color:#fde68a; font:700 1.12rem "Arial Narrow","Aptos Display",sans-serif; text-align:right; white-space:nowrap; }
+.candidate-range small { display:block; color:#8fa3bb; font:500 .58rem monospace; letter-spacing:.05em; text-transform:uppercase; }
+.method-rail { margin:.75rem 0; padding:.72rem .8rem; border:1px solid rgba(148,163,184,.16); border-radius:10px; background:rgba(2,6,23,.58); color:#9fb1c8; font:600 .72rem monospace; letter-spacing:.035em; text-align:center; }
+.method-rail span { color:#22d3ee; padding:0 .25rem; }
+.public-boundary { margin:1rem 0 .25rem; padding:1rem 1.1rem; border:1px solid rgba(251,191,36,.48); border-left:5px solid var(--gold); border-radius:12px; background:linear-gradient(100deg,rgba(69,45,4,.28),rgba(4,17,34,.9)); }
+.public-boundary strong { color:#fde68a; font:700 1rem "Arial Narrow","Aptos Display",sans-serif; letter-spacing:.13em; }
+.public-boundary p { color:#d5e1ef; margin:.35rem 0 0; line-height:1.48; }
+.synthetic-badge { margin:.55rem 0 .7rem; padding:.48rem .65rem; border:1px solid rgba(251,75,92,.38); border-radius:8px; background:rgba(127,29,29,.16); color:#fecdd3; font:700 .72rem monospace; letter-spacing:.06em; }
+
+.stTabs [data-baseweb="tab-list"] { gap:.45rem; margin-top:.55rem; }
 .stTabs [data-baseweb="tab"] { height:3.2rem; padding:0 1.15rem; color:#9fb1c8; background:rgba(15,23,42,.62); border-radius:9px 9px 0 0; border:1px solid rgba(148,163,184,.12); }
 .stTabs [aria-selected="true"] { color:white !important; border-color:rgba(34,211,238,.42) !important; background:rgba(8,47,73,.62) !important; }
 .stButton > button, .stDownloadButton > button { border:1px solid rgba(34,211,238,.48); background:linear-gradient(135deg,#0e7490,#155e75); color:white; font-weight:700; }
@@ -198,6 +265,81 @@ def format_lead(seconds: float) -> str:
     if seconds >= 3600:
         return f"{seconds / 3600:.2g} h"
     return f"{seconds / 60:.0f} min"
+
+
+def format_public_utc(value: datetime) -> str:
+    """Render a provenance timestamp compactly without implying live telemetry."""
+
+    return value.astimezone(UTC).strftime("%d %b %Y · %H:%M:%S UTC")
+
+
+def public_origin_label(result: SnapshotLoadResult) -> str:
+    if result.origin == "network":
+        return "LATEST PUBLIC FETCH"
+    if result.origin == "cache":
+        return "CACHED PUBLIC SNAPSHOT"
+    return "BUNDLED PUBLIC SNAPSHOT"
+
+
+def mean_orbit_summary(mean_motion: float, eccentricity: float) -> tuple[float, int, int]:
+    """Return mean-element period and approximate altitude extrema for display."""
+
+    period_minutes = 1_440.0 / mean_motion
+    radians_per_second = mean_motion * 2.0 * pi / 86_400.0
+    semi_major_axis_km = (398_600.4418 / radians_per_second**2) ** (1.0 / 3.0)
+    perigee_km = round(semi_major_axis_km * (1.0 - eccentricity) - 6_371.0)
+    apogee_km = round(semi_major_axis_km * (1.0 + eccentricity) - 6_371.0)
+    return period_minutes, perigee_km, apogee_km
+
+
+def public_snapshot_record(result: SnapshotLoadResult) -> str:
+    globe_records = snapshot_to_globe_records(result.snapshot)
+    screen_candidates = snapshot_to_screen_candidates(result.snapshot)
+    displayed_candidates = [
+        candidate
+        for candidate in screen_candidates
+        if 0.0 <= float(candidate["tca_hours"]) <= 168.0
+    ]
+    payload = {
+        "record_type": "uk_orbit_guard_public_context_snapshot",
+        "cache_policy": {
+            "origin": result.origin,
+            "snapshot_within_two_hour_ttl_at_load": result.fresh,
+            "ttl_seconds": int(PUBLIC_REFRESH_COOLDOWN.total_seconds()),
+        },
+        "display_contract": {
+            "catalogue_input_count": len(result.snapshot.objects),
+            "catalogue_display_count": len(globe_records),
+            "catalogue_invalid_count": len(result.snapshot.objects)
+            - len(globe_records),
+            "globe_coordinate_frame": "TEME for SGP4 records; labelled element-epoch fallback otherwise",
+            "globe_position_methods": sorted(
+                {str(record["position_model"]) for record in globe_records}
+            ),
+            "socrates_input_count": len(result.snapshot.events),
+            "socrates_display_horizon_hours": 168.0,
+            "socrates_displayed_candidate_count": len(displayed_candidates),
+            "socrates_outside_horizon_count": len(screen_candidates)
+            - len(displayed_candidates),
+            "socrates_invalid_count": len(result.snapshot.events)
+            - len(screen_candidates),
+        },
+        "warning": result.warning,
+        "human_authority_required": True,
+        "operational_collision_assessment": False,
+        "flight_decision": False,
+        "snapshot": result.snapshot.to_mapping(),
+    }
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
+def load_public_context(*, allow_network: bool) -> SnapshotLoadResult:
+    store = PublicSnapshotStore(
+        cache_path=DEFAULT_CACHE_PATH,
+        fixture_path=DEFAULT_FIXTURE_PATH,
+        transport=urllib_transport if allow_network else None,
+    )
+    return store.load(allow_network=allow_network)
 
 
 def orbit_context_figure() -> go.Figure:
@@ -438,8 +580,16 @@ def reset_judge_scenario() -> None:
     st.session_state.custom_delta_v = 0.05
 
 
+def render_synthetic_badge() -> None:
+    st.markdown(
+        f'<div class="synthetic-badge">SYNTHETIC OFFLINE FIXTURE · {scenario.scenario_id} · '
+        f'SEED {scenario.seed} · MODEL {MODEL_VERSION} · SEPARATE FROM ALL PUBLIC OBJECTS</div>',
+        unsafe_allow_html=True,
+    )
+
+
 st.markdown(
-    '<div class="classification"><span class="pulse"></span>Synthetic · Offline · Policy simulator · Not for flight operations</div>',
+    '<div class="classification"><span class="pulse"></span>Public-data prototype · No restricted feeds · No command · Not for flight operations</div>',
     unsafe_allow_html=True,
 )
 st.markdown(
@@ -447,8 +597,8 @@ st.markdown(
 <section class="hero">
   <div class="eyebrow">UK Parliament Hackathon · Defensive Space Resilience</div>
   <div class="hero-title">UK <span>ORBIT GUARD</span></div>
-  <div class="hero-sub"><strong>Conjunction-to-Committee.</strong> Turn warning lead time into an auditable resilience case for Parliament, UK Space Command and the public services that depend on space.</div>
-  <div class="hero-meta">SCENARIO {scenario.scenario_id} · MODEL {MODEL_VERSION} · SEED {scenario.seed} · HUMAN AUTHORITY REQUIRED</div>
+  <div class="hero-sub"><strong>Conjunction-to-Committee.</strong> Public orbital context → transparent screening → a separately auditable resilience case for Parliament, UK Space Command and the public services that depend on space.</div>
+  <div class="hero-meta">PUBLIC CATALOGUE CONTEXT + SYNTHETIC POLICY LAB · SCENARIO {scenario.scenario_id} · HUMAN AUTHORITY REQUIRED</div>
   <div class="mission-strip">
     <div class="mission-chip">Space-domain awareness</div>
     <div class="mission-chip">Asset protection</div>
@@ -460,12 +610,392 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-tab_alert, tab_options, tab_brief = st.tabs(
-    ["01  ALERT", "02  MANOEUVRE OPTIONS", "03  COMMITTEE BRIEF"]
+if "public_context_result" not in st.session_state:
+    try:
+        st.session_state.public_context_result = load_public_context(
+            allow_network=False
+        )
+        st.session_state.public_context_error = None
+    except PublicDataError as error:
+        st.session_state.public_context_result = None
+        st.session_state.public_context_error = str(error)
+if "public_refresh_blocked_until" not in st.session_state:
+    st.session_state.public_refresh_blocked_until = None
+
+refresh_checked_at = datetime.now(UTC)
+refresh_blocked_until = st.session_state.public_refresh_blocked_until
+if isinstance(refresh_blocked_until, datetime) and refresh_blocked_until <= refresh_checked_at:
+    st.session_state.public_refresh_blocked_until = None
+    refresh_blocked_until = None
+public_refresh_blocked = isinstance(refresh_blocked_until, datetime)
+
+public_result: SnapshotLoadResult | None = st.session_state.public_context_result
+
+tab_public, tab_alert, tab_options, tab_brief = st.tabs(
+    [
+        "00  PUBLIC ORBIT PICTURE",
+        "01  SYNTHETIC ALERT",
+        "02  MANOEUVRE OPTIONS",
+        "03  COMMITTEE BRIEF",
+    ]
 )
 
+with tab_public:
+    control_col, source_col = st.columns([0.75, 2.25], gap="large")
+    with control_col:
+        refresh_requested = st.button(
+            "↻  REFRESH PUBLIC DATA IF DUE",
+            width="stretch",
+            disabled=public_refresh_blocked,
+            help=(
+                "Explicitly checks the two-hour cache, then makes one bounded request "
+                "per allowlisted CelesTrak feed only when the cache is due. A failed "
+                "network attempt pauses this control for two hours."
+            ),
+        )
+    with source_col:
+        st.caption(
+            "Offline cache-first default: a verified cache when present, otherwise the "
+            "validated bundled snapshot. Network access occurs only after this control "
+            "is pressed; failed refreshes retain the last-known-good record."
+        )
+
+    if refresh_requested:
+        with st.spinner("Checking cache policy and public CelesTrak feeds…"):
+            try:
+                st.session_state.public_context_result = load_public_context(
+                    allow_network=True
+                )
+                st.session_state.public_context_error = None
+                refreshed_result = st.session_state.public_context_result
+                if refreshed_result.origin == "network" or (
+                    refreshed_result.warning
+                    and "network refresh failed" in refreshed_result.warning.lower()
+                ):
+                    st.session_state.public_refresh_blocked_until = (
+                        datetime.now(UTC) + PUBLIC_REFRESH_COOLDOWN
+                    )
+            except (PublicDataError, OSError) as error:
+                st.session_state.public_context_error = str(error)
+                st.session_state.public_refresh_blocked_until = (
+                    datetime.now(UTC) + PUBLIC_REFRESH_COOLDOWN
+                )
+        public_result = st.session_state.public_context_result
+
+    refresh_blocked_until = st.session_state.public_refresh_blocked_until
+    if isinstance(refresh_blocked_until, datetime):
+        st.info(
+            "Public-source refresh is paused for this session until "
+            f"{format_public_utc(refresh_blocked_until)} after the last network attempt. "
+            "The verified cache/replay remains available; do not retry at the venue."
+        )
+
+    public_error = st.session_state.public_context_error
+    if public_error:
+        st.error(
+            "Public context could not be validated. The synthetic policy lab remains "
+            f"available and isolated. Detail: {public_error}"
+        )
+
+    if public_result is not None:
+        public_snapshot = public_result.snapshot
+        source_label = public_origin_label(public_result)
+        source_timestamp = format_public_utc(public_snapshot.retrieved_at_utc)
+        source_hash = public_snapshot.snapshot_sha256
+        degraded_message = (
+            public_result.warning
+            if public_result.warning
+            and (
+                not public_result.fresh
+                or "failed" in public_result.warning.lower()
+                or "invalid" in public_result.warning.lower()
+            )
+            else None
+        )
+        warning_html = (
+            f'<span class="data-pill">{escape(public_result.warning)}</span>'
+            if public_result.warning
+            else ""
+        )
+        st.markdown(
+            f"""
+<div class="data-ribbon">
+  <strong>{escape(source_label)}</strong>
+  <span class="data-pill">CELESTRAK PUBLIC GP/OMM + SOCRATES</span>
+  <span class="data-pill">RECORDED {escape(source_timestamp)}</span>
+  <span class="data-pill">SHA-256 {source_hash[:12]}…</span>
+  {warning_html}
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+        element_ages_hours = [
+            max(
+                0.0,
+                (
+                    public_snapshot.retrieved_at_utc - object_record.epoch
+                ).total_seconds()
+                / 3_600.0,
+            )
+            for object_record in public_snapshot.objects
+        ]
+        metric_cols = st.columns(4)
+        metric_cols[0].metric(
+            "PUBLIC OMM OBJECTS", len(public_snapshot.objects), "ALLOWLISTED SUBSET"
+        )
+        metric_cols[1].metric(
+            "SOCRATES ROWS", len(public_snapshot.events), "CANDIDATES FOR REVIEW"
+        )
+        metric_cols[2].metric(
+            "MEDIAN ELEMENT AGE",
+            f"{float(np.median(element_ages_hours)):.1f} h",
+            "AT SNAPSHOT FETCH",
+        )
+        metric_cols[3].metric(
+            "DECISION AUTHORITY", "HUMAN", "NO COMMAND LINK"
+        )
+
+        public_view = st.segmented_control(
+            "PUBLIC CONTEXT VIEW",
+            options=["Catalogue", "Proximity screen"],
+            default="Catalogue",
+            key="public_view_mode",
+        ) or "Catalogue"
+
+        if public_view == "Catalogue":
+            object_ids = [item.norad_catalog_id for item in public_snapshot.objects]
+            default_object_id = 35_683 if 35_683 in object_ids else object_ids[0]
+            selected_object_id = st.selectbox(
+                "SELECT A PUBLIC CATALOGUE OBJECT",
+                options=object_ids,
+                index=object_ids.index(default_object_id),
+                format_func=lambda catalogue_id: (
+                    f"{next(item.object_name for item in public_snapshot.objects if item.norad_catalog_id == catalogue_id)} "
+                    f"· NORAD {catalogue_id}"
+                ),
+            )
+            selected_object = next(
+                item
+                for item in public_snapshot.objects
+                if item.norad_catalog_id == selected_object_id
+            )
+            globe_records = snapshot_to_globe_records(
+                public_snapshot, selected_id=selected_object_id
+            )
+            sgp4_record_count = sum(
+                item["position_model"] == "SGP4/TEME at snapshot retrieval time"
+                for item in globe_records
+            )
+            if sgp4_record_count == len(globe_records):
+                globe_source_label = "CELESTRAK GP/OMM · SGP4/TEME DISPLAY REPLAY"
+                globe_degraded_message = degraded_message
+            elif sgp4_record_count:
+                globe_source_label = "CELESTRAK GP/OMM · MIXED DISPLAY METHODS"
+                fallback_message = (
+                    f"{len(globe_records) - sgp4_record_count} object(s) use a labelled "
+                    "two-body element-epoch fallback"
+                )
+                globe_degraded_message = " · ".join(
+                    item for item in (degraded_message, fallback_message) if item
+                )
+            else:
+                globe_source_label = "CELESTRAK GP/OMM · TWO-BODY DISPLAY FALLBACK"
+                globe_degraded_message = " · ".join(
+                    item
+                    for item in (
+                        degraded_message,
+                        "SGP4 unavailable; all positions use the labelled element-epoch fallback",
+                    )
+                    if item
+                )
+            selected_globe_record = next(
+                item
+                for item in globe_records
+                if item["norad_id"] == selected_object_id
+            )
+            visual_col, inspector_col = st.columns([1.65, 0.72], gap="large")
+            with visual_col:
+                st.plotly_chart(
+                    build_public_catalogue_globe(
+                        globe_records,
+                        selected_id=selected_object_id,
+                        title="PUBLIC ORBIT PICTURE / RECORDED SNAPSHOT",
+                        source_label=globe_source_label,
+                        retrieved_at=source_timestamp,
+                        degraded_message=globe_degraded_message,
+                        height=560,
+                    ),
+                    width="stretch",
+                    config={"displayModeBar": False},
+                )
+                st.caption(
+                    "Earth-centred catalogue display replayed at the recorded snapshot time. "
+                    "Positions are propagated public mean elements—not live sensor telemetry."
+                )
+            with inspector_col:
+                period_minutes, perigee_km, apogee_km = mean_orbit_summary(
+                    selected_object.mean_motion, selected_object.eccentricity
+                )
+                age_hours = max(
+                    0.0,
+                    (
+                        public_snapshot.retrieved_at_utc - selected_object.epoch
+                    ).total_seconds()
+                    / 3_600.0,
+                )
+                registry_context = UK_PUBLIC_REGISTRY_CONTEXT.get(selected_object_id)
+                if registry_context:
+                    registry_html = (
+                        f'<p><strong>UK registry context</strong><br>{escape(registry_context["registry"])} · '
+                        f'{escape(registry_context["designation"])}<br>{escape(registry_context["function"])}</p>'
+                    )
+                    registry_boundary = (
+                        "Public UK-registered catalogue example; no claim of current "
+                        "operational status, ownership, manoeuvrability or defence role."
+                    )
+                else:
+                    registry_html = "<p><strong>UK registry context</strong><br>Not asserted</p>"
+                    registry_boundary = (
+                        "Public catalogue context only; no claim of ownership, status, "
+                        "mission, vulnerability or defence relevance."
+                    )
+                st.markdown(
+                    f"""
+<div class="orbit-inspector">
+  <div class="panel-kicker">Selected public object</div>
+  <h3>{escape(selected_object.object_name)}</h3>
+  <div class="object-id">NORAD {selected_object.norad_catalog_id} · {escape(selected_object.object_id or "NO INTERNATIONAL DESIGNATOR")}</div>
+  <div class="telemetry">
+    <div><small>Element epoch</small><strong>{escape(selected_object.epoch.strftime("%d %b · %H:%M"))}</strong></div>
+    <div><small>Age at fetch</small><strong>{age_hours:.1f} h</strong></div>
+    <div><small>Inclination</small><strong>{selected_object.inclination:.2f}°</strong></div>
+    <div><small>Mean period</small><strong>{period_minutes:.1f} min</strong></div>
+    <div><small>Approx perigee</small><strong>{perigee_km:,} km</strong></div>
+    <div><small>Approx apogee</small><strong>{apogee_km:,} km</strong></div>
+  </div>
+  {registry_html}
+  <p><strong>Display model</strong><br>{escape(str(selected_globe_record["position_model"]))}</p>
+  <p><strong>Snapshot fingerprint</strong><br><span class="object-id">{source_hash[:24]}…</span></p>
+  <div class="limit">{escape(registry_boundary)} No covariance, precision ephemeris, hard-body radius or operator intent is available here.</div>
+</div>
+""",
+                    unsafe_allow_html=True,
+                )
+        else:
+            candidates = snapshot_to_screen_candidates(public_snapshot)
+            socrates_as_of = public_snapshot.provenance.socrates_data_as_of
+            socrates_as_of_label = (
+                format_public_utc(socrates_as_of)
+                if socrates_as_of is not None
+                else "NOT RECORDED"
+            )
+            visual_col, list_col = st.columns([1.38, 1.02], gap="large")
+            with visual_col:
+                st.plotly_chart(
+                    build_public_proximity_screen(
+                        candidates,
+                        selected_name="BOUNDED SOCRATES PAIR SET",
+                        centre_role="Aggregate public screening result",
+                        horizon_hours=168.0,
+                        top_n=12,
+                        title="PUBLIC-ELEMENT PROXIMITY SCREEN / 7-DAY WINDOW",
+                        source_label="CELESTRAK SOCRATES · PUBLIC GP MODEL",
+                        degraded_message=degraded_message,
+                        height=560,
+                    ),
+                    width="stretch",
+                    config={"displayModeBar": False},
+                )
+                st.caption(
+                    "Radius is CelesTrak's published source-model minimum range; angle is "
+                    "source-model TCA relative to SOCRATES source as-of "
+                    f"{socrates_as_of_label}."
+                )
+            with list_col:
+                st.markdown("### Candidates for further review")
+                candidate_cards: list[str] = []
+                for rank, item in enumerate(
+                    sorted(
+                        candidates, key=lambda candidate: candidate["minimum_range_km"]
+                    ),
+                    start=1,
+                ):
+                    tca_display = (
+                        str(item["tca_utc"])
+                        .replace("T", " · ")
+                        .replace("Z", " UTC")
+                    )
+                    candidate_cards.append(
+                        '<div class="candidate-row">'
+                        f'<div class="candidate-rank">#{rank:02d}</div>'
+                        '<div>'
+                        f'<div class="candidate-pair">{escape(str(item["first_object_name"]))} ↔ {escape(str(item["second_object_name"]))}</div>'
+                        f'<div class="candidate-meta">NORAD {int(item["first_norad_catalog_id"])} / {int(item["second_norad_catalog_id"])} · {escape(tca_display)} · {float(item["relative_speed_km_s"]):.3f} km/s</div>'
+                        '</div>'
+                        f'<div class="candidate-range">{float(item["minimum_range_km"]):.3f} km<small>source-model min</small></div>'
+                        '</div>'
+                    )
+                st.markdown(
+                    '<div class="candidate-stack">'
+                    + "".join(candidate_cards)
+                    + "</div>",
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    """
+<div class="panel">
+  <div class="panel-kicker">What this screen means</div>
+  <p>These are bounded rows parsed from the public CelesTrak SOCRATES model. They are <strong>review candidates</strong>, not UK-DMC 2 events, alerts, threats or declarations of safety.</p>
+  <p>No locally calculated probability or pairwise detector is being presented.</p>
+</div>
+""",
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown(
+            """
+<div class="method-rail">PUBLIC GP/OMM <span>→</span> SGP4/TEME ORBIT PICTURE <span>→</span> SOCRATES PUBLIC SCREEN <span>→</span> CANDIDATES FOR REVIEW <span>→</span> STOP: PRECISION OPERATIONAL ASSESSMENT REQUIRED</div>
+<div class="public-boundary">
+  <strong>PUBLIC SCREEN ENDS HERE</strong>
+  <p>Public mean elements do not provide the precision ephemerides, covariance, object geometry, operator intent or validated procedures needed for an operational collision-risk decision. Nothing in this tab selects or recommends a manoeuvre. The synthetic policy lab in tabs 01–03 is a separate, fictional resilience case.</p>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+        action_col, link_col = st.columns([0.8, 2.2], gap="large")
+        with action_col:
+            st.download_button(
+                "↓  DOWNLOAD PUBLIC SNAPSHOT RECORD",
+                data=public_snapshot_record(public_result),
+                file_name="orbitguard_public_snapshot_record.json",
+                mime="application/json",
+                width="stretch",
+            )
+        with link_col:
+            st.markdown(
+                f"[CelesTrak GP data format ↗]({CELESTRAK_GP_DOCS_URL}) · "
+                f"[CelesTrak SOCRATES ↗]({CELESTRAK_SOCRATES_URL}) · "
+                f"[CAA UK space-object register ↗]({CAA_CAP2207_URL}) · "
+                f"[Public-element operational warning ↗]({SPACE_TRACK_DOCS_URL})"
+            )
+            st.caption(
+                "Source links are provided for scrutiny. The bundled record keeps the "
+                "demo repeatable if venue Wi-Fi or a public endpoint is unavailable."
+            )
+    else:
+        st.markdown(
+            """
+<div class="public-boundary">
+  <strong>PUBLIC SCREEN UNAVAILABLE</strong>
+  <p>No unvalidated value is substituted. Tabs 01–03 remain a self-contained synthetic demonstration and do not depend on public-object data.</p>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
 with tab_alert:
-    st.write("")
+    render_synthetic_badge()
     metric_cols = st.columns(4)
     metric_cols[0].metric("TIME TO CLOSEST APPROACH", "06:00:00", "ACTION WINDOW")
     metric_cols[1].metric("PROJECTED MISS", "120 m", "BELOW 1 KM", delta_color="inverse")
@@ -509,7 +1039,7 @@ with tab_alert:
         )
 
 with tab_options:
-    st.write("")
+    render_synthetic_badge()
     if "option_label" not in st.session_state:
         st.session_state.option_label = "Act now"
     if "custom_lead_min" not in st.session_state:
@@ -632,7 +1162,6 @@ with tab_options:
         st.markdown("- No atmospheric drag, J2 perturbation, space weather, thruster dynamics, attitude limits, communications delay or secondary-conjunction analysis.")
 
 with tab_brief:
-    st.write("")
     st.markdown(
         """
 <div class="defence-panel">
@@ -645,7 +1174,59 @@ with tab_brief:
         unsafe_allow_html=True,
     )
 
-    st.markdown("## Committee headline")
+    st.markdown("## Evidence confidence ladder")
+    confidence_rows = [
+        {
+            "Evidence layer": "Public GP/OMM catalogue",
+            "Available here": "YES",
+            "Supports": "Approximate recorded-time orbit context",
+            "Does not support": "Operational miss distance or manoeuvre",
+        },
+        {
+            "Evidence layer": "Public SOCRATES model rows",
+            "Available here": "YES",
+            "Supports": "Candidates for qualified further review",
+            "Does not support": "UK operator alert, threat or safety declaration",
+        },
+        {
+            "Evidence layer": "Precision ephemeris + covariance + geometry",
+            "Available here": "NO",
+            "Supports": "Would support operational risk assessment",
+            "Does not support": "No substitute is inferred by this prototype",
+        },
+        {
+            "Evidence layer": "Qualified operator decision + command authority",
+            "Available here": "NO",
+            "Supports": "Required before any operational action",
+            "Does not support": "No autonomous command or recommendation",
+        },
+    ]
+    st.dataframe(
+        pd.DataFrame(confidence_rows),
+        hide_index=True,
+        width="stretch",
+    )
+    if public_result is not None:
+        committee_snapshot = public_result.snapshot
+        st.markdown(
+            f"""
+<div class="data-ribbon">
+  <strong>PUBLIC CONTEXT RECORD</strong>
+  <span class="data-pill">{len(committee_snapshot.objects)} OMM OBJECTS</span>
+  <span class="data-pill">{len(committee_snapshot.events)} SOCRATES REVIEW CANDIDATES</span>
+  <span class="data-pill">RECORDED {escape(format_public_utc(committee_snapshot.retrieved_at_utc))}</span>
+  <span class="data-pill">SHA-256 {committee_snapshot.snapshot_sha256[:12]}…</span>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+    st.caption(
+        "The public evidence chain stops before operational assessment. The policy "
+        "counterfactual below begins from an independent synthetic fixture."
+    )
+
+    render_synthetic_badge()
+    st.markdown("## Synthetic committee headline")
     st.markdown(
         """
 <div class="recommendation">
@@ -733,6 +1314,6 @@ st.markdown(
     "**UK Orbit Guard** · From conjunction to committee · Built for defensive resilience, transparent scrutiny and human authority.",
 )
 st.markdown(
-    '<div class="smallprint">No live services. No credentials. No autonomous command. Deterministic offline fixture only.</div>',
+    '<div class="smallprint">Public GP catalogue visualisation plus a separately fingerprinted synthetic policy fixture. No restricted service, collision probability, autonomous command or operational recommendation.</div>',
     unsafe_allow_html=True,
 )

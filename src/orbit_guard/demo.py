@@ -118,8 +118,9 @@ This is a transparent policy counterfactual, not a flight command or safety guar
 - **Public-service dependency:** Earth-observation services can support environmental monitoring and emergency response.
 - **Policy implication:** tracking coverage, warning latency, data exchange and auditable operator response are resilience investments.
 
-Parliament should scrutinise capability and outcomes; qualified operators and NSpOC remain
-responsible for operational assessment and any spacecraft manoeuvre.
+Parliament should scrutinise capability and outcomes. NSpOC provides warning and
+operational support; any operational assessment and spacecraft manoeuvre remains subject
+to the authorised operator's validated process and decision authority.
 
 ## Three scrutiny questions
 

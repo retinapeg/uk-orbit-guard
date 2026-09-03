@@ -44,3 +44,11 @@ jobs:
         run: python -m orbit_guard.demo --check
       - name: Verify committed fallback exports are current
         run: git diff --exit-code -- artifacts/demo_result.json artifacts/committee_brief.md
+      - name: Verify visual fallback pack is present
+        run: |
+          test -s artifacts/orbit-guard-public-catalogue.png
+          test -s artifacts/orbit-guard-public-globe.png
+          test -s artifacts/orbit-guard-public-screen.png
+          test -s artifacts/orbitguard_alert_fallback.jpg
+          test -s artifacts/orbitguard_options_fallback.jpg
+          test -s artifacts/orbitguard_committee_fallback.jpg
