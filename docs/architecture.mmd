@@ -1,0 +1,45 @@
+%% Architecture of uk-orbit-guard at commit ecd26700176f265b05ae159abbb5783752089f1d
+%% Sources: app.py, src/orbit_guard/debris_catalogue.py, src/orbit_guard/public_data.py, src/orbit_guard/rl_core.py, src/orbit_guard/training_controller.py, scripts/run_daytona_rl_controller.py, src/orbit_guard/daytona_rl.py, scripts/daytona_rl_worker.py, src/orbit_guard/rl_visuals.py, src/orbit_guard/conjunction.py, src/orbit_guard/demo.py, scenarios/uk_eo_demo_1.json
+%% Render: npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/images/architecture.svg -b white
+flowchart TD
+    user["Presenter<br/>human decision authority"]:::human
+
+    subgraph PUB["Public context: display only"]
+        cel["CelesTrak GP + SOCRATES<br/>manual refresh only"]:::ext
+        snap[("Dated snapshots<br/>data/ + .cache/")]:::store
+        sgp4["Validate; SGP4 display<br/>+ SOCRATES screen"]:::det
+    end
+
+    subgraph RL["Synthetic RL path"]
+        enc["Synthetic Hill-frame<br/>encounter, 1-6 objects"]:::mock
+        gen0["Gen 0 COAST rollout<br/>local, untrained"]:::det
+        ctl["Training controller<br/>background process"]:::det
+        cem["CEM linear policy search<br/>Daytona sandbox, optional"]:::ai
+        val["Host validation<br/>hashes, checkpoint replay"]:::eval
+        runs[(".cache/daytona_rl<br/>result, last_verified")]:::store
+    end
+
+    lead["Fictional lead-time fixture<br/>options + committee brief"]:::mock
+    app["Streamlit app.py<br/>5 tabs, Plotly views"]:::det
+
+    user -->|inject buttons| enc
+    user -->|TRAIN button| ctl
+    cel -.->|REFRESH IF DUE| snap
+    snap --> sgp4
+    enc --> gen0
+    enc -->|frozen request| ctl
+    ctl -->|job + worker bundle| cem
+    cem -->|weights + replays| val
+    val -->|verified envelope| runs
+    sgp4 -->|globe + screen views| app
+    gen0 -->|Gen 0 replay| app
+    runs -->|Gen 0-10 replay + passport| app
+    lead -->|tabs 02-04| app
+
+    classDef ai fill:#efe7fb,stroke:#6a4c93,stroke-width:2px,color:#2b1d45;
+    classDef det fill:#eef3f8,stroke:#2f5d8a,stroke-width:1.5px,color:#172c37;
+    classDef human fill:#e8f0ec,stroke:#285b48,stroke-width:1.5px,color:#173f32;
+    classDef eval fill:#f7efdf,stroke:#8b6330,stroke-width:1.5px,color:#4a3413;
+    classDef store fill:#f3f4f1,stroke:#65757b,stroke-width:1.5px,color:#172c37;
+    classDef ext fill:#ffffff,stroke:#2f5d8a,stroke-width:1.5px,stroke-dasharray:4 3,color:#172c37;
+    classDef mock fill:#ffffff,stroke:#9aa5a8,stroke-width:1.5px,stroke-dasharray:6 4,color:#65757b;

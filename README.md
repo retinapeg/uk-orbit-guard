@@ -24,6 +24,56 @@ the RAF, MOD, the National Space Operations Centre (NSpOC), the UK Space Agency
 (UKSA), the Civil Aviation Authority (CAA), CelesTrak or any satellite operator
 is claimed.
 
+![UK Orbit Guard Manoeuvre Options screen for the synthetic SYN-UK-0001 fixture: encounter-plane plot with the illustrative 1 km buffer, a table of four lead-time options, and the 8.0x manoeuvre-demand comparison](docs/images/manoeuvre-options-screenshot.jpg)
+
+*Manoeuvre Options screen from the committed fallback pack, captured on the earlier four-tab build (commit a5cae17) before 00 SPACE COMMAND was added and tabs were renumbered; all values come from the fictional, synthetic SYN-UK-0001 fixture.*
+
+## System architecture
+
+![System architecture: dated public CelesTrak context propagated with SGP4 for display only; a synthetic Hill-frame encounter with a local Gen 0 baseline and optional CEM policy search in a Daytona sandbox, checked by host validation; a separate fictional lead-time fixture; all shown in the Streamlit app](docs/images/architecture.svg)
+
+*Purple: model call · blue: deterministic code · green: human · amber: evaluation · grey: storage · dashed: external, optional, mocked or planned*
+
+The Streamlit app starts offline: public CelesTrak GP/OMM records come from a
+committed dated snapshot or local cache, are propagated with SGP4 for display
+only, and are fetched from the network only when the presenter presses a
+refresh control. The presenter injects synthetic Hill-frame objects, the app
+replays a local, untrained Gen 0 `COAST` episode, and **TRAIN** hands a frozen
+request to a background controller that runs cross-entropy-method (CEM) policy
+search in a private, network-blocked Daytona sandbox. The host re-hashes and
+re-simulates every returned checkpoint before writing a verified result under
+`.cache/daytona_rl/` for the generation replay and run passport, while a
+separate fictional lead-time fixture drives tabs 02–04. The text diagram and
+key-file list are in [Architecture](#architecture) below.
+
+## How AI is used
+
+- **Model:** a learned policy, not an LLM. `hill-cem-v1` is a linear policy
+  (5 thrust actions × 13 inputs = 65 weights, argmax action) trained by CEM in
+  `rl_core.train_policy`: 10 generations × 24 candidates × 3 perturbed
+  episodes = 720 search episodes, seed 42.
+- **Inputs:** a 12-feature observation from the synthetic encounter only (own
+  state, nearest-object relative state, closest-approach time/miss, object
+  count, episode progress). Public CelesTrak data never reaches the policy.
+- **Where it is trained:** only in an optional Daytona sandbox (needs
+  `daytona==0.207.0` and `DAYTONA_API_KEY`). The host re-simulates returned
+  checkpoints for validation but never trains locally; without the sandbox the
+  app shows only the deterministic Gen 0 baseline.
+- **Outputs:** per-generation weights, checkpoint hashes and trajectories,
+  shown as a replay and training curve. They are thrust choices in a teaching
+  model, never a manoeuvre recommendation, flight plan or spacecraft command.
+- **Deterministic or human-controlled:** SGP4 display, the 8× lead-time
+  fixture, committee brief and validation are deterministic code; the
+  presenter chooses whether to inject, train or load a replay, and real
+  decisions stay with humans (see [Hard stop](#hard-stop-before-any-real-decision)).
+- **Evaluation:** the host re-runs the baseline, trained and every generation
+  checkpoint with `simulate_policy` and rejects mismatched sandbox, scenario,
+  runtime or checkpoint evidence (see
+  [Honest Daytona evidence contract](#honest-daytona-evidence-contract));
+  `pytest` and `python -m orbit_guard.demo --check` run in CI.
+- **Limitations:** a planar Hill/LVLH model around an illustrative 550 km orbit
+  with a 0.35 km keep-out radius. Educational, not operational.
+
 ## What is new in the command centre
 
 The first tab, **00 SPACE COMMAND**, is the stage surface:
