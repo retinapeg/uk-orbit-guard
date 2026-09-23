@@ -31,7 +31,7 @@ screenshots and this document are not evidence that a live run occurred.
 Run from the exact project root:
 
 ```bash
-cd "/Users/leonardaarons-ditson/Documents/ChatGPT/parliament hackathon/uk-orbit-guard"
+cd uk-orbit-guard
 git status --short --branch
 python3 -m venv .venv
 source .venv/bin/activate
@@ -213,7 +213,7 @@ replay and Gen 0 do not. Public startup is offline by design.
 ## Friday: 30 minutes before the slot
 
 ```bash
-cd "/Users/leonardaarons-ditson/Documents/ChatGPT/parliament hackathon/uk-orbit-guard"
+cd uk-orbit-guard
 git status --short --branch
 source .venv/bin/activate
 python -m pytest -q

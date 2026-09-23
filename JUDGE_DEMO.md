@@ -3,7 +3,7 @@
 ## Start
 
 ```bash
-cd "/Users/leonardaarons-ditson/Documents/ChatGPT/parliament hackathon/uk-orbit-guard"
+cd uk-orbit-guard
 source .venv/bin/activate
 python -m pytest -q
 python -m orbit_guard.demo --check

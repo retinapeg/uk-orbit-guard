@@ -174,7 +174,7 @@ Python 3.10 or newer is required. The frozen base demo environment was prepared
 on Python 3.11.5.
 
 ```bash
-cd "/Users/leonardaarons-ditson/Documents/ChatGPT/parliament hackathon/uk-orbit-guard"
+cd uk-orbit-guard
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
