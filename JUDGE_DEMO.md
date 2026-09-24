@@ -31,7 +31,7 @@ printf '\n'
 test -n "${DAYTONA_API_KEY:-}" && echo "DAYTONA_API_KEY is set"
 ```
 
-Never print or store the value. Rote is not a runtime dependency.
+Never print or store the value.
 
 ## Read the evidence state first
 

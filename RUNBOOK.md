@@ -46,7 +46,7 @@ git diff --exit-code -- artifacts/demo_result.json artifacts/committee_brief.md
 
 The base lock was prepared on Python 3.11.5. `requirements-live.txt` separately
 pins the host Daytona SDK. Do not upgrade packages or regenerate a lock at the
-venue. Rote is not part of the runtime and does not need installing.
+venue.
 
 ### Set `DAYTONA_API_KEY` without exposing it
 

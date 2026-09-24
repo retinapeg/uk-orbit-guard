@@ -189,8 +189,7 @@ python -m pip install -r requirements-live.txt
 
 `requirements-live.txt` pins `daytona==0.207.0`. The remote worker itself uses
 only the Python standard library; the Daytona package is needed by the host
-controller. Rote is **not** a runtime dependency and does not need to be
-installed for the demo.
+controller.
 
 Set the credential in the same zsh process that launches Streamlit, without
 putting the secret in the repository, a command argument or shell history:
@@ -329,7 +328,3 @@ responsible spacecraft operator. Human decision authority is required.
 - [NSpOC: role and mission sets](https://www.gov.uk/government/organisations/national-space-operations-centre/about)
 - [RAF: UK Space Command](https://www.raf.mod.uk/what-we-do/uk-space-command/)
 - [UK Parliament: Space Resilience inquiry](https://committees.parliament.uk/committee/111/national-security-strategy-joint-committee/news/217022/security-in-space-committee-launches-new-inquiry-on-space-resilience/)
-
-The work is on `codex/uk-orbit-guard-demo`. The original repository is retained
-as the `upstream` remote; this local build does not imply publication or
-deployment.
